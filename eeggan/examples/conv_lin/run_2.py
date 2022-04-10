@@ -19,16 +19,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import random
-import wandb
 import argparse
 
 
-matplotlib.use('TKAgg')
+matplotlib.use('TKAgg') # for OSX
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
-torch.backends.cudnn.enabled = True
-torch.backends.cudnn.benchmark = True
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1' # needed for the GPU
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # needed for the GPU
+torch.backends.cudnn.enabled = True # needed for the GPU
+torch.backends.cudnn.benchmark = True # needed for the GPU
 
 parser = argparse.ArgumentParser(description='Signal EEGAN')
 
@@ -53,6 +52,8 @@ parser.add_argument('--device', type=str,           default= torch.device("cuda:
 parser.add_argument("--return_counts", type=bool, default=True)
 parser.add_argument("--mode", default='client')
 parser.add_argument("--port", default=52162)
+parser.add_argument("--wandb", type=bool, default=True)
+
 
 args = parser.parse_args()
 
@@ -61,35 +62,22 @@ for i in args.__dict__.keys():
         exec(i + '=' + str(args.__dict__[i]))
     except:
         exec(i + '=' + 'r"' + str(args.__dict__[i]) + '"')
+        
+if wandb:
+    import wandb
+    wandb.init(project="EEG_GAN", entity="hubertp")
+    wandb.watch(generator, log_freq=5)
 
-os.environ["CUDA_PATH"] = cuda_path
+os.environ["CUDA_PATH"] = cuda_path     # set the CUDA path
 
-
-# block_epochs = list(np.array(block_epochs)//100)
-# block_epochs = [1,1,1,1,1,1]
-
-# Params used in GAN before mapping network extension
-# subj_ind = 9
-# n_critic = 5
-# n_batch = 2048 * 2
-# n_z = 16
-# lr = 0.01
-# n_blocks = 6
-# rampup = 2000.
-# # block_epochs = [500,1000,1000,1000,4000,4000]
-# block_epochs = [500,300,300,500,500,500]
-# subj_ind = int(os.getenv('SLURM_ARRAY_TASK_ID','0'))
-# task_ind = 0#subj_ind
-# #subj_ind = 9
-
-
+# set seeds
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 random.seed(seed)
 rng = np.random.RandomState(seed)
 
-if not os.path.exists(compiled_data_path):
+if not os.path.exists(compiled_data_path):      # if the data is not compiled, compile it
     from eeggan.dataset.dataset import EEGDataClass
 
     dc = EEGDataClass(data_path)
@@ -99,47 +87,44 @@ if not os.path.exists(compiled_data_path):
     data_tuple = (train, target)
     pickle.dump(data_tuple, open(compiled_data_path, 'wb'))
 
-train, target = pickle.load(open(compiled_data_path, 'rb'))
+train, target = pickle.load(open(compiled_data_path, 'rb'))         # load the data
 
-train = train[:, None, :, None].astype(np.float32)
+train = train[:, None, :, None].astype(np.float32)          # add the channel dimension
 
-train = train - train.mean()
-train = train / train.std()
+train = train - train.mean()                          # center the data
+train = train / train.std()                           # normalize the data
 
-train_quantile = np.percentile(np.abs(train), 98)
-train = train[(np.abs(train) < train_quantile)[:,0,:,0].all(axis = 1),:,:,:]
-train = train/(train_quantile + 1e-8)
+train_quantile = np.percentile(np.abs(train), 98)                               # get the quantile of the data
+train = train[(np.abs(train) < train_quantile)[:,0,:,0].all(axis = 1),:,:,:]    # remove the data that is too big
+train = train/(train_quantile + 1e-8)                                           # normalize the data
 
-target_onehot = np.zeros((target.shape[0], 2))
-target_onehot[:, target] = 1
+modelpath = model_path                                          # path to save the model
 
-modelpath = config.model_path
-
-modelname = 'Progressive%s'
-if not os.path.exists(model_path):
+modelname = 'Progressive%s'                                     # the name of the model
+if not os.path.exists(model_path):                              # if the model does not exist, create it
     os.makedirs(model_path)
+    
+generator = Generator(1, n_z)                                   # create the generator
+discriminator = Discriminator(1)                                # create the discriminator
 
-generator = Generator(1, n_z)
-discriminator = Discriminator(1)
-
-generator.train_init(alpha=lr, betas=(0., 0.99))
-discriminator.train_init(alpha=lr, betas=(0., 0.99), eps_center=0.001,
+generator.train_init(alpha=l_r, betas=(0., 0.99))                             # initialize the generator
+discriminator.train_init(alpha=l_r, betas=(0., 0.99), eps_center=0.001,       # initialize the discriminator
                          one_sided_penalty=True, distance_weighting=True)
-generator = generator.apply(weight_filler)
-discriminator = discriminator.apply(weight_filler)
+generator = generator.apply(weight_filler)                                   # initialize the weights
+discriminator = discriminator.apply(weight_filler)                           # initialize the weights
 
-i_block_tmp = 0
-i_epoch_tmp = 0
-generator.model.cur_block = i_block_tmp
-discriminator.model.cur_block = n_blocks - 1 - i_block_tmp
-fade_alpha = 1.
-generator.model.alpha = fade_alpha
-discriminator.model.alpha = fade_alpha
-print("Size of the training set:",train.shape)
-# plt.plot(train[1000,0,:,0])
-# plt.show()
+i_block_tmp = 0                                                 # initialize the block
+i_epoch_tmp = 0                                                 # initialize the epoch
+generator.model.cur_block = i_block_tmp                         # set the current block
+discriminator.model.cur_block = n_blocks - 1 - i_block_tmp      # set the current block
+fade_alpha = 1.                                                 # initialize the fade alpha
+generator.model.alpha = fade_alpha                              # set the alpha
+discriminator.model.alpha = fade_alpha                          # set the alpha 
+print("Size of the training set:",train.shape)                  # print the size of the training set
 
-generator = generator.cuda()
+
+# move shit to gpu
+generator = generator.cuda() 
 discriminator = discriminator.cuda()
 generator.train()
 discriminator.train()
@@ -147,21 +132,20 @@ discriminator.train()
 losses_d = []
 losses_g = []
 i_epoch = 0
-z_vars_im = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
+z_vars_im = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32) # initialize the z variables
 
-# wandb.init(project="EEG_GAN", entity="hubertp")
-# wandb.watch(generator, log_freq=5)
 
-for i_block in range(i_block_tmp, n_blocks):
+
+for i_block in range(i_block_tmp, n_blocks): ################# for blocks
     print("-----------------")
     c = 0
     with torch.no_grad():
-        train_tmp = discriminator.model.downsample_to_block(
+        train_tmp = discriminator.model.downsample_to_block(  # downsample the training data to the current block
             torch.from_numpy(train).to(device),
             discriminator.model.cur_block
         ).data.cpu()
 
-    for i_epoch in tqdm(range(i_epoch_tmp, block_epochs[i_block])):
+    for i_epoch in tqdm(range(i_epoch_tmp, block_epochs[i_block])): ################## for epochs
         i_epoch_tmp = 0
 
         if fade_alpha < 1:
@@ -169,10 +153,10 @@ for i_block in range(i_block_tmp, n_blocks):
             generator.model.alpha = fade_alpha
             discriminator.model.alpha = fade_alpha
 
-        batches = get_balanced_batches(train.shape[0], rng, True, batch_size=n_batch)
-        iters = max(int(len(batches) / n_critic), 1)
+        batches = get_balanced_batches(train.shape[0], rng, True, batch_size=n_batch) # get the batches
+        iters = max(int(len(batches) / n_critic), 1) # get the number of iterations
 
-        for it in range(iters):
+        for it in range(iters): ##################for iterations
             #critic training
             for i_critic in range(n_critic):
                 try:
@@ -191,26 +175,25 @@ for i_block in range(i_block_tmp, n_blocks):
 
                 loss_d = discriminator.train_batch(batch_real, batch_fake)
 
-                # assert np.all(np.isfinite(loss_d))
-
+            #generator training 
 
             z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
-            z_vars = Variable(torch.from_numpy(z_vars), requires_grad=True).cuda()
+            z_vards = z_vars.requires_grad_(True).cuda()
             loss_g = generator.train_batch(z_vars, discriminator)
 
         losses_d.append(loss_d)
         losses_g.append(loss_g)
 
-        # if wandb:
-        #     wandb.log(
-        #         {
-        #             "Learning_rate": lr,
-        #             "Loss_F": loss_d[0],
-        #             "Loss_R": loss_d[1],
-        #             "Penalty": loss_d[2],
-        #             "Generator Loss": loss_g
-        #         }
-        #     )
+        if wandb:
+            wandb.log(
+                {
+                    "Learning_rate": lr,
+                    "Loss_F": loss_d[0],
+                    "Loss_R": loss_d[1],
+                    "Penalty": loss_d[2],
+                    "Generator Loss": loss_g
+                }
+            )
 
         if i_epoch % 10 == 0:
 
@@ -219,75 +202,23 @@ for i_block in range(i_block_tmp, n_blocks):
 
             print('Epoch: %d   Loss_F: %.3f   Loss_R: %.3f   Penalty: %.4f   Loss_G: %.3f' % (
             i_epoch, loss_d[0], loss_d[1], loss_d[2], loss_g))
-            joblib.dump((i_epoch, losses_d, losses_g), os.path.join(modelpath, modelname % jobid + '_.data'),
-                        compress=True)
-            joblib.dump((i_epoch, losses_d, losses_g),
-                        os.path.join(modelpath, modelname % jobid + '_%d.data' % i_epoch), compress=True)
-            # joblib.dump((n_epochs,n_z,n_critic,batch_size,lr),os.path.join(modelpath,modelname%jobid+'_%d.params'%i_epoch),compress=True)
 
             freqs_tmp = np.fft.rfftfreq(train_tmp.numpy().shape[2], d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
-
             train_fft = np.fft.rfft(train_tmp.numpy(), axis=2)
             train_amps = np.abs(train_fft).mean(axis=3).mean(axis=0).squeeze()
-
             z_vars = Variable(torch.from_numpy(z_vars_im), volatile=True).cuda()
             batch_fake = generator(z_vars)
-
             fake_fft = np.fft.rfft(batch_fake.data.cpu().numpy(), axis=2)
-            fake_amps = np.abs(fake_fft).mean(axis=3).mean(axis=0).squeeze()
-
-            plt.figure()
-            plt.plot(freqs_tmp, np.log(fake_amps), label='Fake')
-            plt.plot(freqs_tmp, np.log(train_amps), label='Real')
-            plt.title(f'Frequency Spektrum, block {i_block}')
-            plt.xlabel('Hz')
-            plt.legend()
-            plt.savefig(os.path.join(modelpath, modelname % jobid + '_fft_%d_%d.png' % (i_block, i_epoch)))
-            plt.close()
-
             batch_fake = batch_fake.data.cpu().numpy()
-            plt.figure(figsize=(10, 10))
-            plt.title(f'Fake samples, block {i_block}')
-            for i in range(10):
-                plt.subplot(10, 1, i + 1)
-                plt.plot(batch_fake[i].squeeze())
-                plt.xticks((), ())
-                plt.yticks((), ())
-            plt.subplots_adjust(hspace=0)
-            plt.savefig(os.path.join(modelpath, modelname % jobid + '_fakes_%d_%d.png' % (i_block, i_epoch)))
-            plt.close()
+            
+            plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps)
 
             discriminator.save_model(os.path.join(modelpath, modelname % jobid + '.disc'))
             generator.save_model(os.path.join(modelpath, modelname % jobid + '.gen'))
 
-            # plt.figure(figsize=(10,15))
-            # plt.subplot(3,2,1)
-            # plt.plot(np.asarray(losses_d)[:,0],label='Loss Real')
-            # plt.plot(np.asarray(losses_d)[:,1],label='Loss Fake')
-            # plt.title('Losses Discriminator')
-            # plt.legend()
-            # plt.subplot(3,2,2)
-            # plt.plot(np.asarray(losses_d)[:,0]+np.asarray(losses_d)[:,1]+np.asarray(losses_d)[:,2],label='Loss')
-            # plt.title('Loss Discriminator')
-            # plt.legend()
-            # plt.subplot(3,2,3)
-            # plt.plot(np.asarray(losses_d)[:,2],label='Penalty Loss')
-            # plt.title('Penalty')
-            # plt.legend()
-            # plt.subplot(3,2,4)
-            # plt.plot(-np.asarray(losses_d)[:,0]-np.asarray(losses_d)[:,1],label='Wasserstein Distance')
-            # plt.title('Wasserstein Distance')
-            # plt.legend()
-            # plt.subplot(3,2,5)
-            # plt.plot(np.asarray(losses_g),label='Loss Generator')
-            # plt.title('Loss Generator')
-            # plt.legend()
-            # plt.tight_layout()
-            # plt.savefig(os.path.join(modelpath,modelname%jobid+'_losses.png'))
-            # plt.close()
-
             generator.train()
             discriminator.train()
+
         lr /= 1.05
         lr = max(lr, 0.001)
 

@@ -52,3 +52,26 @@ def weight_filler(m):
 	elif classname.find('BatchNorm') != -1 or classname.find('LayerNorm') != -1:
 		m.weight.data.normal_(1.0, 0.02)
 		m.bias.data.fill_(0.)
+
+def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps):
+	fake_amps = np.abs(fake_fft).mean(axis=3).mean(axis=0).squeeze()
+
+	plt.figure()
+	plt.plot(freqs_tmp, np.log(fake_amps), label='Fake')
+	plt.plot(freqs_tmp, np.log(train_amps), label='Real')
+	plt.title(f'Frequency Spektrum, block {i_block}')
+	plt.xlabel('Hz')
+	plt.legend()
+	plt.savefig(os.path.join(modelpath, modelname % jobid + '_fft_%d_%d.png' % (i_block, i_epoch)))
+	plt.close()
+
+	plt.figure(figsize=(10, 10))
+	plt.title(f'Fake samples, block {i_block}')
+	for i in range(10):
+		plt.subplot(10, 1, i + 1)
+		plt.plot(batch_fake[i].squeeze())
+		plt.xticks((), ())
+		plt.yticks((), ())
+	plt.subplots_adjust(hspace=0)
+	plt.savefig(os.path.join(modelpath, modelname % jobid + '_fakes_%d_%d.png' % (i_block, i_epoch)))
+	plt.close()
