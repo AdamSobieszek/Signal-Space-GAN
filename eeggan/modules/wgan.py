@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
-import eeggan.util as utils
+import eeggan.utils.util as utils
 import torch.autograd as autograd
 import torch.nn.functional as F
 import numpy as np
