@@ -1,6 +1,9 @@
 # coding=utf-8
 from torch.autograd import Variable
 from torch.nn import Module
+import matplotlib as plt
+import os
+
 
 def cuda_check(module_list):
     """
