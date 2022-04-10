@@ -1,9 +1,6 @@
 # coding=utf-8
-import torch
 from torch import nn
-import numpy as np
-from torch.autograd import Variable
-import torch.nn.functional as F
+
 
 class Reshape(nn.Module):
     """

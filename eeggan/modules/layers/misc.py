@@ -2,10 +2,6 @@
 import torch
 from torch.nn.modules.module import Module
 import torch.nn as nn
-from torch.autograd import Variable
-from torch.nn.parameter import Parameter
-import numpy as np
-import torch.nn.functional as F
 
 class Conv2d_contiguous(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,

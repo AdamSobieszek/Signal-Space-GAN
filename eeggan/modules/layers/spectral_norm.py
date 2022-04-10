@@ -1,8 +1,6 @@
 # coding=utf-8
-from torch.nn.parameter import Parameter
-from torch.autograd import Variable
 import torch
-import numpy as np
+
 
 class SpectralNorm(object):
     """
@@ -49,7 +47,7 @@ class SpectralNorm(object):
         return fn
 
     def remove(self, module):
-        del module._buffers[name + '_u']
+        del module._buffers[self.name + '_u']
 
     def __call__(self, module, input):
         self.compute_weight(module)

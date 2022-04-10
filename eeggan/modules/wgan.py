@@ -5,8 +5,6 @@ from torch.autograd import Variable
 from torch import optim
 import eeggan.utils.util as utils
 import torch.autograd as autograd
-import torch.nn.functional as F
-import numpy as np
 
 class GAN_Module(nn.Module):
     """

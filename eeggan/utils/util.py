@@ -2,6 +2,7 @@
 from torch.autograd import Variable
 from torch.nn import Module
 import matplotlib as plt
+import numpy as np
 import os
 
 
@@ -65,7 +66,7 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
     plt.title(f'Frequency Spektrum, block {i_block}')
     plt.xlabel('Hz')
     plt.legend()
-    plt.savefig(os.path.join(modelpath, modelname % jobid + '_fft_%d_%d.png' % (i_block, i_epoch)))
+    plt.savefig(os.path.join(model_path, model_name % jobid + '_fft_%d_%d.png' % (i_block, i_epoch)))
     plt.close()
 
     plt.figure(figsize=(10, 10))
@@ -76,5 +77,5 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
         plt.xticks((), ())
         plt.yticks((), ())
     plt.subplots_adjust(hspace=0)
-    plt.savefig(os.path.join(modelpath, modelname % jobid + '_fakes_%d_%d.png' % (i_block, i_epoch)))
+    plt.savefig(os.path.join(model_path, model_name % jobid + '_fakes_%d_%d.png' % (i_block, i_epoch)))
     plt.close()

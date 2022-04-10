@@ -1,12 +1,8 @@
 #import things
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import numpy as np
-import math
-import random
-import matplotlib.pyplot as plt
+
 
 
 class FullyConnectedLayer(torch.nn.Module):

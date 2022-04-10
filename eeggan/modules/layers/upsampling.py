@@ -3,7 +3,6 @@ import torch
 from torch.nn.modules.module import Module
 import torch.nn as nn
 from torch.autograd import Variable
-from torch.nn.parameter import Parameter
 import numpy as np
 import torch.nn.functional as F
 

@@ -3,8 +3,6 @@ import torch
 from torch import nn
 import numpy as np
 from eeggan.modules.layers.multiconv import MultiConv1d
-from torch.autograd import Variable
-import torch.nn.functional as F
 
 class WeightScale(object):
     """
@@ -47,7 +45,7 @@ class WeightScale(object):
         delattr(module, self.name)
         del module._parameters[self.name + '_unscaled']
         del module._parameters[self.name + '_c']
-        module.register_parameter(self.name, Parameter(weight.data))
+        module.register_parameter(self.name, nn.Parameter(weight.data))
 
     def __call__(self, module, inputs):
         setattr(module, self.name, self.compute_weight(module))

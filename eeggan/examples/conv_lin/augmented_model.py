@@ -3,12 +3,10 @@ import sys
 sys.path.append('../../../')
 
 # coding=utf-8
-import braindecode
 from torch import nn
 from eeggan.modules.layers.reshape import Reshape,PixelShuffle2d
 from eeggan.modules.layers.normalization import PixelNorm
 from eeggan.modules.layers.weight_scaling import weight_scale
-from eeggan.modules.layers.upsampling import CubicUpsampling1d,CubicUpsampling2d
 from eeggan.modules.layers.stdmap import StdMap1d
 from eeggan.modules.progressive import ProgressiveGenerator,ProgressiveGeneratorBlock,\
                             ProgressiveDiscriminator,ProgressiveDiscriminatorBlock
