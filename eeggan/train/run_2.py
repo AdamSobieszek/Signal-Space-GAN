@@ -10,7 +10,7 @@ import pickle
 from tqdm import tqdm
 
 from braindecode.datautil.iterators import get_balanced_batches
-from eeggan.examples.conv_lin.augmented_model import Generator, Discriminator
+from eeggan.modules.augmented_model import Generator, Discriminator
 from eeggan.utils.util import weight_filler
 import torch
 import torch.nn as nn

@@ -1,37 +1,27 @@
 # coding=utf-8
+import sys
 from torch import nn
 from eeggan.modules.layers.reshape import Reshape,PixelShuffle2d
 from eeggan.modules.layers.normalization import PixelNorm
 from eeggan.modules.layers.weight_scaling import weight_scale
-from eeggan.modules.layers.upsampling import CubicUpsampling1d,CubicUpsampling2d
 from eeggan.modules.layers.stdmap import StdMap1d
-from eeggan.modules.layers.multiconv import MultiConv1d
 from eeggan.modules.progressive import ProgressiveGenerator,ProgressiveGeneratorBlock,\
                             ProgressiveDiscriminator,ProgressiveDiscriminatorBlock
 from eeggan.modules.wgan import WGAN_I_Generator,WGAN_I_Discriminator
 from torch.nn.init import calculate_gain
+from eeggan.modules.layers.mapping_network import MappingNetwork
 
+sys.path.append('../../../')
 
 def create_disc_blocks(n_chans):
-    def create_conv_sequence(in_filters,out_filters,stdmap=False):
-        conv_configs = list()
-        conv_configs.append({'kernel_size':3,'padding':1})
-        conv_configs.append({'kernel_size':5,'padding':2})
-        conv_configs.append({'kernel_size':7,'padding':3})
-        conv_configs.append({'kernel_size':9,'padding':4})
-        conv_configs.append({'kernel_size':11,'padding':5})
-        filters_tmp = in_filters
-        split = True
-        if stdmap:
-            filters_tmp = in_filters-1
-            split = False
-        return nn.Sequential(weight_scale(MultiConv1d(conv_configs,in_filters,filters_tmp,split_in_channels=split),
+    def create_conv_sequence(in_filters,out_filters):
+        return nn.Sequential(weight_scale(nn.Conv1d(in_filters,in_filters,9,padding=4),
                                                         gain=calculate_gain('leaky_relu')),
                                 nn.LeakyReLU(0.2),
-                                weight_scale(MultiConv1d(conv_configs,filters_tmp,out_filters,split_in_channels=True),
+                                weight_scale(nn.Conv1d(in_filters,out_filters,9,padding=4),
                                                         gain=calculate_gain('leaky_relu')),
                                 nn.LeakyReLU(0.2),
-                                weight_scale(nn.Conv1d(out_filters,out_filters,2,stride=2,groups=5),
+                                weight_scale(nn.Conv1d(out_filters,out_filters,2,stride=2),
                                                         gain=calculate_gain('leaky_relu')),
                                 nn.LeakyReLU(0.2))
     def create_in_sequence(n_chans,out_filters):
@@ -74,7 +64,7 @@ def create_disc_blocks(n_chans):
     blocks.append(tmp_block)
     tmp_block = ProgressiveDiscriminatorBlock(
                               nn.Sequential(StdMap1d(),
-                                            create_conv_sequence(51,50,stdmap=True),
+                                            create_conv_sequence(51,50),
                                             Reshape([[0],-1]),
                                             weight_scale(nn.Linear(50*12,1),
                                                             gain=calculate_gain('linear'))),
@@ -87,18 +77,12 @@ def create_disc_blocks(n_chans):
 
 def create_gen_blocks(n_chans,z_vars):
     def create_conv_sequence(in_filters,out_filters):
-        conv_configs = list()
-        conv_configs.append({'kernel_size':3,'padding':1})
-        conv_configs.append({'kernel_size':5,'padding':2})
-        conv_configs.append({'kernel_size':7,'padding':3})
-        conv_configs.append({'kernel_size':9,'padding':4})
-        conv_configs.append({'kernel_size':11,'padding':5})
         return nn.Sequential(nn.Upsample(mode='linear',scale_factor=2),
-                                weight_scale(MultiConv1d(conv_configs,in_filters,out_filters,split_in_channels=True),
+                                weight_scale(nn.Conv1d(in_filters,out_filters,9,padding=4),
                                                         gain=calculate_gain('leaky_relu')),
                                 nn.LeakyReLU(0.2),
                                 PixelNorm(),
-                                weight_scale(MultiConv1d(conv_configs,out_filters,out_filters,split_in_channels=True),
+                                weight_scale(nn.Conv1d(out_filters,out_filters,9,padding=4),
                                                         gain=calculate_gain('leaky_relu')),
                                 nn.LeakyReLU(0.2),
                                 PixelNorm())
@@ -152,17 +136,18 @@ def create_gen_blocks(n_chans,z_vars):
     blocks.append(tmp_block)
     return blocks
 
-
 class Generator(WGAN_I_Generator):
-    def __init__(self,n_chans,z_vars):
+    def __init__(self, n_chans, z_vars, num_map_layers = 2):
         super(Generator,self).__init__()
-        self.model = ProgressiveGenerator(create_gen_blocks(n_chans,z_vars))
+        self.model = ProgressiveGenerator(create_gen_blocks(n_chans, z_vars))
+        self.mapping = MappingNetwork(z_vars, z_vars, num_map_layers)
 
-    def forward(self,input):
-        return self.model(input)
+    def forward(self,input, truncation_psi = 1):
+        out = self.mapping(input, truncation_psi)
+        return self.model(out)
 
 class Discriminator(WGAN_I_Discriminator):
-    def __init__(self,n_chans):
+    def __init__(self, n_chans):
         super(Discriminator,self).__init__()
         self.model = ProgressiveDiscriminator(create_disc_blocks(n_chans))
 
