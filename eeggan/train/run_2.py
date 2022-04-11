@@ -10,8 +10,8 @@ import pickle
 from tqdm import tqdm
 
 from braindecode.datautil.iterators import get_balanced_batches
-from eeggan.examples.conv_lin.augmented_model import Generator, Discriminator
-from eeggan.util import weight_filler
+from eeggan.modules.augmented_model import Generator, Discriminator
+from eeggan.utils.util import weight_filler
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -24,31 +24,31 @@ import argparse
 
 matplotlib.use('TKAgg') # for OSX
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1' # needed for the GPU
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # needed for the GPU
-torch.backends.cudnn.enabled = True # needed for the GPU
-torch.backends.cudnn.benchmark = True # needed for the GPU
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+os.environ['KMP_DUPLICATE_LIB_OK']='True' 
+torch.backends.cudnn.enabled = True 
+torch.backends.cudnn.benchmark = True 
 
 parser = argparse.ArgumentParser(description='Signal EEGAN')
 
 
 ### data and file related arguments
-parser.add_argument('--jobid', type=int, default=0,                help='name of corpus')
-parser.add_argument('--n_critic', type=int, default=1,                   help='directory containing data')
-parser.add_argument('--n_z', type=int, default=16,                         help='line 153')
-parser.add_argument('--l_r', type=int, default=0.05,               help='path to save results')
-parser.add_argument('--n_blocks', type=int, default=6,                      help='number of documents in a batch for training')
-parser.add_argument('--rampup', type=int, default=100,                   help='to get the right data..minimum document frequency')
-parser.add_argument('--seed', type=int, default=0,                   help='number of epochs')
-parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 400, 800],                   help='number of epochs')
-parser.add_argument('--n_batch', type=int, default=2648 * 8,                   help='number of epochs')
+parser.add_argument('--jobid', type=int, default=0, help='name of corpus')
+parser.add_argument('--n_critic', type=int, default=1, help='directory containing data')
+parser.add_argument('--n_z', type=int, default=16, help='line 153')
+parser.add_argument('--l_r', type=int, default=0.05, help='path to save results')
+parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
+parser.add_argument('--rampup', type=int, default=100, help='to get the right data..minimum document frequency')
+parser.add_argument('--seed', type=int, default=0, help='number of epochs')
+parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 400, 800], help='number of epochs')
+parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of epochs')
 
 
-parser.add_argument('--cuda_path', type=str,            default= r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.3",    help='number of epochs')
-parser.add_argument('--compiled_data_path', type=str,   default= r'C:\Users\hplis\OneDrive\Documents\GitHub\train-768.pkl',      help='number of epochs')
-parser.add_argument('--data_path', type=str,            default= r'C:\Users\hplis\Downloads\eeg_files',                          help='number of epochs')
-parser.add_argument('--model_path', type=str,           default= './test.cnt',                                                   help='number of epochs')
-parser.add_argument('--device', type=str,           default= torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),                                                   help='number of epochs')
+parser.add_argument('--cuda_path', type=str, default= r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.3", help='number of epochs')
+parser.add_argument('--compiled_data_path', type=str, default= r'C:\Users\hplis\OneDrive\Documents\GitHub\train-768.pkl', help='number of epochs')
+parser.add_argument('--data_path', type=str, default= r'C:\Users\hplis\Downloads\eeg_files', help='number of epochs')
+parser.add_argument('--model_path', type=str, default= './test.cnt', help='number of epochs')
+parser.add_argument('--device', type=str, default= torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),                                                   help='number of epochs')
 parser.add_argument("--return_counts", type=bool, default=True)
 parser.add_argument("--mode", default='client')
 parser.add_argument("--port", default=52162)
@@ -68,7 +68,7 @@ if wandb:
     wandb.init(project="EEG_GAN", entity="hubertp")
     wandb.watch(generator, log_freq=5)
 
-os.environ["CUDA_PATH"] = cuda_path     # set the CUDA path
+os.environ["CUDA_PATH"] = cuda_path  
 
 # set seeds
 np.random.seed(seed)
@@ -77,7 +77,7 @@ torch.cuda.manual_seed_all(seed)
 random.seed(seed)
 rng = np.random.RandomState(seed)
 
-if not os.path.exists(compiled_data_path):      # if the data is not compiled, compile it
+if not os.path.exists(compiled_data_path): 
     from eeggan.dataset.dataset import EEGDataClass
 
     dc = EEGDataClass(data_path)
@@ -87,40 +87,40 @@ if not os.path.exists(compiled_data_path):      # if the data is not compiled, c
     data_tuple = (train, target)
     pickle.dump(data_tuple, open(compiled_data_path, 'wb'))
 
-train, target = pickle.load(open(compiled_data_path, 'rb'))         # load the data
+train, target = pickle.load(open(compiled_data_path, 'rb'))         
 
-train = train[:, None, :, None].astype(np.float32)          # add the channel dimension
+train = train[:, None, :, None].astype(np.float32)    
 
-train = train - train.mean()                          # center the data
-train = train / train.std()                           # normalize the data
+train = train - train.mean()                          
+train = train / train.std()                           
 
-train_quantile = np.percentile(np.abs(train), 98)                               # get the quantile of the data
-train = train[(np.abs(train) < train_quantile)[:,0,:,0].all(axis = 1),:,:,:]    # remove the data that is too big
-train = train/(train_quantile + 1e-8)                                           # normalize the data
+train_quantile = np.percentile(np.abs(train), 98)                               
+train = train[(np.abs(train) < train_quantile)[:,0,:,0].all(axis = 1),:,:,:]    
+train = train/(train_quantile + 1e-8)                                           
 
-modelpath = model_path                                          # path to save the model
+modelpath = model_path                                         
 
-modelname = 'Progressive%s'                                     # the name of the model
-if not os.path.exists(model_path):                              # if the model does not exist, create it
+modelname = 'Progressive%s'                                    
+if not os.path.exists(model_path):                             
     os.makedirs(model_path)
     
-generator = Generator(1, n_z)                                   # create the generator
-discriminator = Discriminator(1)                                # create the discriminator
+generator = Generator(1, n_z)                                  
+discriminator = Discriminator(1)                               
 
-generator.train_init(alpha=l_r, betas=(0., 0.99))                             # initialize the generator
-discriminator.train_init(alpha=l_r, betas=(0., 0.99), eps_center=0.001,       # initialize the discriminator
+generator.train_init(alpha=l_r, betas=(0., 0.99))                            
+discriminator.train_init(alpha=l_r, betas=(0., 0.99), eps_center=0.001,      
                          one_sided_penalty=True, distance_weighting=True)
-generator = generator.apply(weight_filler)                                   # initialize the weights
-discriminator = discriminator.apply(weight_filler)                           # initialize the weights
+generator = generator.apply(weight_filler)                                   
+discriminator = discriminator.apply(weight_filler)                           
 
-i_block_tmp = 0                                                 # initialize the block
-i_epoch_tmp = 0                                                 # initialize the epoch
-generator.model.cur_block = i_block_tmp                         # set the current block
-discriminator.model.cur_block = n_blocks - 1 - i_block_tmp      # set the current block
-fade_alpha = 1.                                                 # initialize the fade alpha
-generator.model.alpha = fade_alpha                              # set the alpha
-discriminator.model.alpha = fade_alpha                          # set the alpha 
-print("Size of the training set:",train.shape)                  # print the size of the training set
+i_block_tmp = 0                                                 
+i_epoch_tmp = 0                                                 
+generator.model.cur_block = i_block_tmp                         
+discriminator.model.cur_block = n_blocks - 1 - i_block_tmp      
+fade_alpha = 1.                                                 
+generator.model.alpha = fade_alpha                              
+discriminator.model.alpha = fade_alpha                          
+print("Size of the training set:",train.shape)                  
 
 
 # move shit to gpu

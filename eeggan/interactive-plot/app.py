@@ -1,23 +1,18 @@
+#coding utf-8
+from sklearn.decomposition import PCA
+from torch.autograd import Variable
+from eeggan.modules.augmented_model import Generator, Discriminator
+from streamlit_plotly_events import plotly_events
+from math import factorial
+import sys
+import json
+import streamlit as st
 import torch
 import numpy as np
-
-from torch.autograd import Variable
-
-import sys
-
-import json
-sys.path.append('../../')
-
-import streamlit as st
-from streamlit_plotly_events import plotly_events
-
-from eeggan.examples.conv_lin.model import Generator, Discriminator
-
 import plotly.express as px
-
-from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
+sys.path.append('../../')
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -67,8 +62,6 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
        W.H. Press, S.A. Teukolsky, W.T. Vetterling, B.P. Flannery
        Cambridge University Press ISBN-13: 9780521880688
     """
-    import numpy as np
-    from math import factorial
     
     try:
         window_size = np.abs(np.int(window_size))
