@@ -1,7 +1,7 @@
 #coding utf-8
 from sklearn.decomposition import PCA
 from torch.autograd import Variable
-from eeggan.modules.augmented_model import Generator, Discriminator
+from eeggan.modules.model import Generator, Discriminator
 from streamlit_plotly_events import plotly_events
 from math import factorial
 import sys
