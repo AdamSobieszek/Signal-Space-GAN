@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from braindecode.datautil.iterators import get_balanced_batches
 from eeggan.modules.wgan import Generator, Discriminator
-from eeggan.utils.util import weight_filler
+from eeggan.utils.util import plot_stuff, weight_filler
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
