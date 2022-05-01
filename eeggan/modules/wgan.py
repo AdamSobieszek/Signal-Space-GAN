@@ -1,10 +1,18 @@
 # coding=utf-8
 import torch
 import torch.nn as nn
+import torch.autograd as autograd
+import eeggan.utils.util as utils
 from torch.autograd import Variable
 from torch import optim
-import eeggan.utils.util as utils
-import torch.autograd as autograd
+from progressive import(
+    ProgressiveGenerator,
+    GeneratorBlocks,
+    ProgressiveDiscriminator,
+    DiscriminatorBlocks
+)
+from layers.mapping_network import MappingNetwork
+
 
 class GAN_Module(nn.Module):
     """
@@ -54,7 +62,6 @@ class GAN_Module(nn.Module):
 
         self.load_state_dict(model_state)
         self.optimizer.load_state_dict(opt_state)
-
 
 
 class WGAN_I_Discriminator(GAN_Module):
@@ -324,3 +331,50 @@ class WGAN_I_Generator(GAN_Module):
 
         loss = loss.data[0]
         return loss # return loss
+
+class Generator(WGAN_I_Generator):
+    def __init__(
+        self, n_blocks:int, n_chans:int,
+        z_vars:int, in_filters:int,
+        out_filters:int, factor:int,
+        num_map_layers:int
+    ):
+
+        super(Generator,self).__init__()
+        blocks = GeneratorBlocks(
+            n_blocks=n_blocks,
+            n_chans=n_chans,
+            z_vars=z_vars,
+            in_filters=in_filters,
+            out_filters=out_filters,
+            factor=factor
+        )
+
+        self.model = ProgressiveGenerator(blocks)
+        self.mapping = MappingNetwork(
+            z_vars, z_vars,
+            num_map_layers=num_map_layers
+        )
+
+    def forward(self,input, truncation_psi = 1):
+        out = self.mapping(input, truncation_psi)
+        return self.model(out)
+
+class Discriminator(WGAN_I_Discriminator):
+    def __init__(
+    self, n_blocks:int, n_chans:int,
+    in_filters:int, out_filters:int,
+    factor:int
+    ):
+        super(Discriminator,self).__init__()
+        blocks = DiscriminatorBlocks(
+            n_blocks=n_blocks,
+            n_chans=n_chans,
+            in_filters=in_filters,
+            out_filters=out_filters,
+            factor=factor
+        )
+        self.model = ProgressiveDiscriminator(blocks)
+
+    def forward(self,input):
+        return self.model(input)

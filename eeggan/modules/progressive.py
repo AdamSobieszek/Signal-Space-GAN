@@ -1,5 +1,11 @@
 # coding=utf-8
 from torch import nn
+from eeggan.modules.layers.reshape import Reshape,PixelShuffle2d
+from eeggan.modules.layers.normalization import PixelNorm
+from eeggan.modules.layers.weight_scaling import weight_scale
+from eeggan.modules.layers.stdmap import StdMap1d
+from torch.nn.init import calculate_gain
+from typing import List
 import torch
 
 """
@@ -134,8 +140,6 @@ class ProgressiveDiscriminatorBlock(nn.Module):
 
     def forward(self,input,first=False):
         if first:
-            # import pdb 
-            # pdb.set_trace()
             input = self.in_sequence(input)
         out = self.intermediate_sequence(input)
         return out
@@ -164,3 +168,154 @@ class ProgressiveGeneratorBlock(nn.Module):
         if last:
             out = self.out_sequence(out)
         return out
+
+class DiscriminatorBlocks(nn.Module):
+    
+    def __init__(
+        self, n_blocks:int, n_chans:int,
+        in_filters:int, out_filters:int, factor:int
+     ):
+        """Make Discriminator Blocks
+
+        Args:
+            n_blocks (int): number of blocks
+            n_chans (int): number of channels
+            in_filters (int): number of conv in_filters 
+            out_filters (int): number of conv out_filters 
+            factor (int): upscale/downscale factor in max/avg pooling
+        """
+        super(DiscriminatorBlocks).__init__()
+        self.n_chans = n_chans
+        self.in_filters = in_filters
+        self.out_filters = out_filters
+        self.n_blocks = n_blocks
+        self.factor = factor
+
+    
+    def create_conv_sequence(self):
+        return nn.Sequential(
+            weight_scale(nn.Conv1d(self.in_filters,
+                self.in_filters,
+                9,
+                padding=4),
+                gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            weight_scale(nn.Conv1d(self.in_filters,
+             self.out_filters,
+             9,
+             padding=4),
+                gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            weight_scale(nn.Conv1d(self.out_filters,
+                self.out_filters,
+                2,
+                stride=2),
+            gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2)
+            )
+    def create_in_sequence(self):
+        return nn.Sequential(
+            weight_scale(nn.Conv2d(1, self.out_filters, (1,self.n_chans)),
+                gain=calculate_gain('leaky_relu')),
+            Reshape([[0],[1],[2]]),
+            nn.LeakyReLU(0.2))
+    def create_fade_sequence(self):
+        return nn.AvgPool2d((self.factor,1), stride=(self.factor, 1))
+
+    def get_blocks(self) -> List(torch.nn.Module):
+        blocks = []
+        for i in range(self.n_blocks):
+            if i == self.n_blocks-1:
+                tmp_block = ProgressiveDiscriminatorBlock(
+                                nn.Sequential(StdMap1d(),
+                                    self.create_conv_sequence(),
+                                    Reshape([[0],-1]),
+                                    weight_scale(nn.Linear(50*12,1),
+                                                gain=calculate_gain('linear'))),
+                                self.create_in_sequence(),
+                                None)
+                blocks.append(tmp_block)
+                return blocks
+            tmp_block = ProgressiveDiscriminatorBlock(
+                              self.create_conv_sequence(),
+                              self.create_in_sequence(),
+                              self.create_fade_sequence()
+                              )
+            blocks.append(tmp_block)
+
+
+class GeneratorBlocks(nn.Module):
+    def __init__(
+        self, n_blocks:int, n_chans:int,
+        z_vars:int, in_filters:int,
+        out_filters:int, factor:int
+    ):
+        """Make Generator Blocks 
+
+        Args:
+            n_blocks (int): number of blocks
+            n_chans (int): number of channels
+            z_vars (int): latent dim
+            in_filters (int): number of conv in_filters 
+            out_filters (int): number of conv out_filters 
+            factor (int): upscale/downscale factor in max/avg pooling
+        """
+        super(GeneratorBlocks).__init__()
+        self.n_chans = n_chans
+        self.z_vars = z_vars
+        self.in_filters = in_filters
+        self.out_filters = out_filters
+        self.factor = factor
+        self.n_blocks = n_blocks
+
+    def create_conv_sequence(self):
+        return nn.Sequential(
+            nn.Upsample(mode='linear',scale_factor=2),
+                weight_scale(nn.Conv1d(self.in_filters,
+                    self.out_filters,9,padding=4),
+                    gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            PixelNorm(),
+            weight_scale(nn.Conv1d(
+                self.out_filters,
+                self.out_filters,9,
+                padding=4
+            ),
+            gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            PixelNorm()
+        )
+    def create_out_sequence(self):
+        return nn.Sequential(
+            weight_scale(nn.Conv1d(self.in_filters,self.n_chans,1),
+                gain=calculate_gain('linear')),
+            Reshape([[0],[1],[2],1]),
+            PixelShuffle2d([1,self.n_chans])
+        )
+
+    def create_fade_sequence(self):
+        return nn.Upsample(mode='bilinear',scale_factor=(self.factor,1))
+
+    def get_blocks(self)-> List(torch.nn.Module):
+        blocks = []
+        for i in range(self.n_blocks):
+            if i == 0:
+                tmp_block = ProgressiveGeneratorBlock(
+                    nn.Sequential(
+                        weight_scale(
+                            nn.Linear(self.z_vars,50*12),
+                            gain=calculate_gain('leaky_relu')),
+                        nn.LeakyReLU(0.2),
+                        Reshape([[0],50,-1]),
+                        self.create_conv_sequence()),
+                                self.create_out_sequence(),
+                                self.create_fade_sequence()
+                                )
+                blocks.append(tmp_block)
+            tmp_block = ProgressiveGeneratorBlock(
+                                        self.create_conv_sequence(),
+                                        self.create_out_sequence(),
+                                        self.create_fade_sequence()
+                                        )
+            blocks.append(tmp_block)          
+        return blocks

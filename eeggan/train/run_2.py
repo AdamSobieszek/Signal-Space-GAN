@@ -1,7 +1,5 @@
 # %load_ext autoreload
 # %autoreload 2
-import config
-
 import os
 import joblib
 import sys
@@ -10,8 +8,8 @@ import pickle
 from tqdm import tqdm
 
 from braindecode.datautil.iterators import get_balanced_batches
-from eeggan.modules.augmented_model import Generator, Discriminator
-from eeggan.utils.util import weight_filler
+from eeggan.modules.wgan import Generator, Discriminator
+from eeggan.utils.util import plot_stuff, weight_filler
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
