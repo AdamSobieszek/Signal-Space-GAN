@@ -351,12 +351,12 @@ class Generator(WGAN_I_Generator):
             in_filters=in_filters,
             out_filters=out_filters,
             factor=factor
-        )
+        ).get_blocks()
 
         self.model = ProgressiveGenerator(blocks)
         self.mapping = MappingNetwork(
             z_vars, z_vars,
-            num_map_layers=num_map_layers
+            num_layers=num_map_layers
         )
 
     def forward(self,input, truncation_psi = 1):
@@ -376,7 +376,7 @@ class Discriminator(WGAN_I_Discriminator):
             in_filters=in_filters,
             out_filters=out_filters,
             factor=factor
-        )
+        ).get_blocks()
         self.model = ProgressiveDiscriminator(blocks)
 
     def forward(self,input):
