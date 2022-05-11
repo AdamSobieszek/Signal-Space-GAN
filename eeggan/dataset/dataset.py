@@ -86,7 +86,7 @@ class EEGpreprocessing:
         Returns:
             ArrayLike: Post ICA signal with deleted Diod and EOG channel.
         """
-        signal.drop_channels('Diode')
+        signal.drop_channels('dioda')
         ica = ICA(n_components=19, method='fastica')
         ica.fit(signal, decim=None, reject={'eeg':10e-4}, verbose=False)
         ica.exclude = []
@@ -97,6 +97,9 @@ class EEGpreprocessing:
         ica.exclude = eog_indices
         eeg_ica  = ica.apply(signal.copy(), exclude = eog_indices)
         eeg_ica.drop_channels('EOG')
+        eeg_ica.drop_channels('TSS')
+        eeg_ica.drop_channels('A1')
+        eeg_ica.drop_channels('A2')
 
         return eeg_ica
     
@@ -125,35 +128,38 @@ class EEGpreprocessing:
 
         """
 
-        for (file,name) in zip(self.files[:1], self.file_name[:1]):
-            raw = mne.io.read_raw_eeglab(file, eog='auto')
-            Fs=raw.info['sfreq']
-            Fs_int = int(Fs)
+        for (file,name) in zip(self.files, self.file_name):
+            if name + '.npy' not in os.listdir('C:/data/eegan/binary/'):
+                raw = mne.io.read_raw_eeglab(file, eog='auto', preload=True)
+                mne.set_bipolar_reference(raw, 'A1', 'A2')
+                Fs=raw.info['sfreq']
+                Fs_int = int(Fs)
 
-            raw.load_data()
-            sf = self._filtering(signal=raw)
-            s_ica = self._ica(signal=sf)
-            n_chan = s_ica.info['nchan']
+                raw.load_data()
+                sf = self._filtering(signal=raw)
+                s_ica = self._ica(signal=sf)
+                n_chan = s_ica.info['nchan']
 
-            eventstarts = mne.events_from_annotations(raw.copy())[0]
-            eventstarts = eventstarts[np.where(eventstarts[:,2] == 1)][:,0]
-            events = np.zeros((len(eventstarts), n_chan, Fs_int))
-            for i, start in enumerate(eventstarts):
+                eventstarts = mne.events_from_annotations(raw.copy())[0]
+                eventstarts = eventstarts[np.where(eventstarts[:,2] == 1)][:,0]
+                events = np.zeros((len(eventstarts), n_chan, Fs_int))
+                print(events.shape)
+                for i, start in enumerate(eventstarts):
 
-                crop_data = s_ica.copy().crop(
-                                        tmin=(start/Fs)-0.2,
-                                        tmax=(start/Fs)+0.8, 
-                                        include_tmax=False
-                                        )  
-                crop_data_values = crop_data.get_data(units='uV')
-                init_mean = crop_data_values[:int(0.2 * Fs_int)].mean()
-                events[i,:,:] = crop_data_values - init_mean
-            
-            clean_signal = self._setthreshold(signal=events, threshold = 50.0)
-            np.save(file=f'../../data/binary/{name}.npy', arr=clean_signal)
+                    crop_data = s_ica.copy().crop(
+                                            tmin=(start/Fs)-0.2,
+                                            tmax=(start/Fs)+0.8,
+                                            include_tmax=False
+                                            )
+                    crop_data_values = crop_data.get_data(units='uV')
+                    init_mean = crop_data_values[:int(0.2 * Fs_int)].mean()
+                    events[i,:,:] = crop_data_values - init_mean
+
+                clean_signal = self._setthreshold(signal=events, threshold = 50.0)
+                np.save(file=f'C:/data/eegan/binary/{name}.npy', arr=clean_signal)
 
 
 if __name__ == "__main__":
 
-    data = EEGpreprocessing()
+    data = EEGpreprocessing(path = 'C:/data/eegan')
     data.prepare()

@@ -2,16 +2,19 @@
 import torch
 import torch.nn as nn
 import torch.autograd as autograd
-import eeggan.utils.util as utils
+import sys
+sys.path.append('..')
+import utils.util as utils
 from torch.autograd import Variable
 from torch import optim
-from progressive import(
+# print path
+from modules.progressive import(
     ProgressiveGenerator,
     GeneratorBlocks,
     ProgressiveDiscriminator,
     DiscriminatorBlocks
 )
-from layers.mapping_network import MappingNetwork
+from modules.layers.mapping_network import MappingNetwork
 
 
 class GAN_Module(nn.Module):

@@ -1,0 +1,24 @@
+{
+    "os": "Windows-10-10.0.22000-SP0",
+    "python": "3.9.5",
+    "heartbeatAt": "2022-05-11T11:37:52.911442",
+    "startedAt": "2022-05-11T11:37:51.251646",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "gpu_count": 1,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:\\GitHub\\Signal-Space-GAN\\eeggan\\train\\run_2.py",
+    "codePath": "eeggan\\train\\run_2.py",
+    "git": {
+        "remote": "https://github.com/AdamSobieszek/Signal-Space-GAN.git",
+        "commit": "92911973f09559a759408720979f2c75e570e7a7"
+    },
+    "email": "hplisiecki@gmail.com",
+    "root": "C:/GitHub/Signal-Space-GAN",
+    "host": "MSI",
+    "username": "hplis",
+    "executable": "C:\\GitHub\\Signal-Space-GAN\\pypy\\Scripts\\python.exe"
+}

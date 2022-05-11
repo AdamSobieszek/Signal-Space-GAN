@@ -2,7 +2,9 @@
 import torch
 from torch import nn
 import numpy as np
-from eeggan.modules.layers.multiconv import MultiConv1d
+import sys
+sys.path.append('..')
+from modules.layers.multiconv import MultiConv1d
 
 class WeightScale(object):
     """

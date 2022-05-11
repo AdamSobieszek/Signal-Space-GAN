@@ -12,7 +12,10 @@ class EEGDataLoader:
                             self.files.append(os.path.join(folderpath, file))
                         except FileNotFoundError as e:
                             print(file)
-    
+
+    def __len__(self):
+        return len(self.files)
+
     def __getitem__(self, index) -> np.ndarray:
         filepath = self.files[index]
         data = np.load(file=filepath)

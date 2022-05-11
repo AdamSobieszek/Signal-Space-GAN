@@ -1,9 +1,11 @@
 # coding=utf-8
 from torch import nn
-from eeggan.modules.layers.reshape import Reshape,PixelShuffle2d
-from eeggan.modules.layers.normalization import PixelNorm
-from eeggan.modules.layers.weight_scaling import weight_scale
-from eeggan.modules.layers.stdmap import StdMap1d
+import sys
+sys.path.append('..')
+from modules.layers.reshape import Reshape,PixelShuffle2d
+from modules.layers.normalization import PixelNorm
+from modules.layers.weight_scaling import weight_scale
+from modules.layers.stdmap import StdMap1d
 from torch.nn.init import calculate_gain
 from typing import List
 import torch
@@ -222,7 +224,7 @@ class DiscriminatorBlocks(nn.Module):
     def create_fade_sequence(self):
         return nn.AvgPool2d((self.factor,1), stride=(self.factor, 1))
 
-    def get_blocks(self) -> List(torch.nn.Module):
+    def get_blocks(self):
         blocks = []
         for i in range(self.n_blocks):
             if i == self.n_blocks-1:
@@ -296,7 +298,7 @@ class GeneratorBlocks(nn.Module):
     def create_fade_sequence(self):
         return nn.Upsample(mode='bilinear',scale_factor=(self.factor,1))
 
-    def get_blocks(self)-> List(torch.nn.Module):
+    def get_blocks(self):
         blocks = []
         for i in range(self.n_blocks):
             if i == 0:
