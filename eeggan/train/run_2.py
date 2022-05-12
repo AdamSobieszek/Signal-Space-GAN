@@ -76,14 +76,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 args = parser.parse_args()
 
-# for i in args.__dict__.keys():
-#     try:
-#         exec(i + '=' + str(args.__dict__[i]))
-#     except:
-#         exec(i + '=' + 'r"' + str(args.__dict__[i]) + '"')
-        
-
-
 os.environ["CUDA_PATH"] = args.cuda_path
 
 # set seeds
