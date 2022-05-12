@@ -47,7 +47,7 @@ parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of epo
 
 parser.add_argument('--cuda_path', type=str, default= r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.3", help='number of epochs')
 parser.add_argument('--compiled_data_path', type=str, default= r'C:\Users\hplis\OneDrive\Documents\GitHub\train-768.pkl', help='number of epochs')
-parser.add_argument('--data_path', type=str, default= r'', help='number of epochs')
+parser.add_argument('--data_path', type=str, default = r"C:\data\eegan\binary", help='number of epochs')
 parser.add_argument('--model_path', type=str, default= './test.cnt', help='number of epochs')
 parser.add_argument('--device', type=str, default= torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),                                                   help='number of epochs')
 parser.add_argument("--return_counts", type=bool, default=True)
@@ -125,7 +125,7 @@ discriminator.model.cur_block = n_blocks - 1 - i_block_tmp
 fade_alpha = 1.                                                 
 generator.model.alpha = fade_alpha                              
 discriminator.model.alpha = fade_alpha                          
-print("Size of the training set:",train.shape)                  
+# print("Size of the training set:",train.shape)
 
 
 # move shit to gpu
