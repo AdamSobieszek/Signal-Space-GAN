@@ -82,7 +82,10 @@ class WGAN_I_Discriminator(GAN_Module):
 
     def train_init(self,alpha=1e-4,betas=(0.5,0.9),
                    lambd=10,one_sided_penalty=False,distance_weighting=False,
-                   eps_drift=0.,eps_center=0.,lambd_consistency_term=0.):
+                   eps_drift=0.,eps_center=0.,lambd_consistency_term=0.,
+                   scheduler = False,
+                   warmup_steps = 600,
+                   num_steps = 1000):
         """
         Initialize Adam optimizer for discriminator
 
@@ -117,8 +120,16 @@ class WGAN_I_Discriminator(GAN_Module):
         (EEG) brain signals. Retrieved from https://arxiv.org/abs/1806.01875
         """
         # super(WGAN_I_Discriminator,self).train_init(alpha,betas)
+        self.alpha = alpha
+        self.betas = betas
+        self.warmup_steps = warmup_steps
+        self.num_steps = num_steps
 
-        self.optimizer = optim.Adam(self.parameters(),lr=alpha,betas=betas)
+        self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
+        if scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = self.num_steps)
         self.loss = torch.nn.BCELoss()
         self.did_init_train = True
 
@@ -129,6 +140,7 @@ class WGAN_I_Discriminator(GAN_Module):
         self.eps_drift = eps_drift
         self.eps_center = eps_center
         self.lambd_consistency_term = lambd_consistency_term
+
 
 
     def pre_train(self):
@@ -142,6 +154,16 @@ class WGAN_I_Discriminator(GAN_Module):
 
     def update_parameters(self):
         self.optimizer.step()
+        if self.scheduler:
+            self.scheduler.step()
+
+    def reset_parameters(self, new_num_steps):
+        self.optimizer = optim.Adam(self.parameters(),lr = self.alpha, betas = self.betas)
+        if self.scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = new_num_steps)
+
 
 
     def train_batch(self, batch_real, batch_fake):
@@ -272,7 +294,10 @@ class WGAN_I_Generator(GAN_Module):
     def __init__(self):
         super(WGAN_I_Generator, self).__init__()
 
-    def train_init(self,alpha=1e-4,betas=(0.5,0.9)):
+    def train_init(self, alpha=1e-4, betas=(0.5,0.9),
+                   scheduler = None,
+                   warmup_steps = 600,
+                   num_steps = 400):
         """
         Initialize Adam optimizer for generator
 
@@ -283,8 +308,21 @@ class WGAN_I_Generator(GAN_Module):
         betas : (float,float), optional
             Betas for Adam
         """
-        self.loss = None
+        self.alpha = alpha
+        self.betas = betas
+        self.warmup_steps = warmup_steps
+        self.num_steps = num_steps
+
         self.optimizer = optim.Adam(self.parameters(),lr=alpha,betas=betas)
+
+        self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
+        if scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = self.num_steps)
+
+        self.loss = None
+
         self.did_init_train = True
 
     def pre_train(self,discriminator):
@@ -298,6 +336,15 @@ class WGAN_I_Generator(GAN_Module):
 
     def update_parameters(self):
         self.optimizer.step()
+        if self.scheduler:
+            self.scheduler.step()
+
+    def reset_parameters(self, new_num_steps):
+        self.optimizer = optim.Adam(self.parameters(), lr=self.alpha, betas=self.betas)
+        if self.scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                             num_warmup_steps=self.warmup_steps,
+                                                             num_training_steps=new_num_steps)
 
     def train_batch(self, batch_noise, discriminator):
         """
