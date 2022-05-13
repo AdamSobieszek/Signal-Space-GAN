@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 
-class EEGDataLoader:
+class ProcessedEEGDataset:
     def __init__(self, folderpath = r'../../data/binary'):
         self.folderpath = folderpath
         self.files = []
