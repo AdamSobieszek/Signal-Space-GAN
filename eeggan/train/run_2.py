@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 import argparse
-from dataset.dataloader import EEGDataLoader
+from dataset.dataloader import ProcessedEEGDataset
 
 
 matplotlib.use('TKAgg') # for OSX
@@ -86,7 +86,7 @@ random.seed(args.seed)
 rng = np.random.RandomState(args.seed)
 
 
-data = EEGDataLoader(args.data_path)
+data = ProcessedEEGDataset(args.data_path)
 
 # if not os.path.exists(compiled_data_path):
 #     from dataset.dataset import EEGDataClass
