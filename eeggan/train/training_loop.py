@@ -1,8 +1,16 @@
-
+import torch
+from braindecode.datautil.iterators import get_balanced_batches
+from torch.autograd import Variable
+import wandb
 
 
 def training_loop(i_block_tmp, n_blocks, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, rng, n_batch, device, wandb_enabled = False, jobid):
+                  rampup, fade_alpha, n_critic, rng, n_batch, device, wandb_enabled = False, jobid,
+                  wandb_project, entity):
+
+    if wandb_enabled:
+        wandb.init(project = wandb_project, entity = entity)
+        wandb.watch(generator, log_freq=5)
     for i_block in range(i_block_tmp, n_blocks):  ################# for blocks
         print("-----------------")
 
