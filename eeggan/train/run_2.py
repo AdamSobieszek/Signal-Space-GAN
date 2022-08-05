@@ -9,7 +9,6 @@ import pickle
 from tqdm import tqdm
 import sys
 sys.path.append('..')
-from braindecode.datautil.iterators import get_balanced_batches
 from modules.wgan import Generator, Discriminator
 
 
@@ -22,7 +21,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 import argparse
-from dataset.dataloader import ProcessedEEGDataset
+from dataset.dataset import ProcessedEEGDataset
 
 
 matplotlib.use('TKAgg') # for OSX
@@ -177,7 +176,7 @@ for i_block in range(i_block_tmp, args.n_blocks): ################# for blocks
 
             for it in range(iters): ##################for iterations
                 #critic training
-                for i_critic in range(args.n_critic): # ############################## for critics
+                for batch in torch.utils.DataLoader(,=args.n_critic, shuffle=True): # ############################## for critics
                     try:
                         train_batches = train_tmp[batches[it * args.n_critic + i_critic]] # get the batch
                     except IndexError:

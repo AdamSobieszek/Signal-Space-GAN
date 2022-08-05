@@ -80,7 +80,7 @@ rng = np.random.RandomState(task_ind)
 
 datapath = config.compiled_data_path
 if not os.path.exists(datapath):
-    from eeggan.dataset.dataset import EEGDataClass
+    from eeggan.dataset.data_preprocessing import EEGDataClass
 
     dc = EEGDataClass(config.dataset_path)
 
