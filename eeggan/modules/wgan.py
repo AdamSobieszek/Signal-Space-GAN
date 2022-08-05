@@ -335,7 +335,7 @@ class WGAN_I_Generator(GAN_Module):
 class Generator(WGAN_I_Generator):
     def __init__(
         self, n_blocks:int, n_chans:int,
-        z_vars:int, in_filters:int,
+        n_z:int, in_filters:int,
         out_filters:int, factor:int,
         num_map_layers:int
     ):
@@ -344,7 +344,7 @@ class Generator(WGAN_I_Generator):
         blocks = GeneratorBlocks(
             n_blocks=n_blocks,
             n_chans=n_chans,
-            z_vars=z_vars,
+            z_vars=n_z,
             in_filters=in_filters,
             out_filters=out_filters,
             factor=factor
@@ -352,7 +352,7 @@ class Generator(WGAN_I_Generator):
 
         self.model = ProgressiveGenerator(blocks)
         self.mapping = MappingNetwork(
-            z_vars, z_vars,
+            n_z, n_z,
             num_map_layers=num_map_layers
         )
 
