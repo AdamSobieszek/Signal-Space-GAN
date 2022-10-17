@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib
 import random
 import argparse
-from dataset.dataloader import EEGDataLoader
+from dataset.dataset import ProcessedEEGDataset
 from training_loop import training_loop
 
 matplotlib.use('TKAgg')  # for OSX
@@ -84,7 +84,7 @@ torch.cuda.manual_seed_all(args.seed)
 random.seed(args.seed)
 rng = np.random.RandomState(args.seed)
 
-data = EEGDataLoader(args.data_path)
+data = ProcessedEEGDataset(args.data_path)
 
 # if not os.path.exists(compiled_data_path):
 #     from dataset.dataset import EEGDataClass
