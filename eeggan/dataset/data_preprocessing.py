@@ -8,7 +8,6 @@ import pymatreader
 import mne
 import os
 import warnings
-import pymatreader
 warnings.filterwarnings('ignore')
 
 
@@ -22,9 +21,11 @@ class EEGpreprocessing:
     pass directory to data.
     """
 
-    def __init__(self, path=r'../../data/raw'):
+    def __init__(self, path=r'../../data/raw',output_path = r'../../data/binary'):
         self.files = []
         self.file_name = []
+        self.path = path
+        self.output_path = output_path
         for file in tqdm(os.listdir(path)):
             if file.endswith('.set'):
                 try:
@@ -123,7 +124,7 @@ class EEGpreprocessing:
         return new_signal
 
 
-    def _read_tag(fname):
+    def _read_tag(self, fname):
         from mne.utils._bunch import Bunch
         eeg = pymatreader.read_mat(fname, uint16_codec=None)
         eeg = eeg.get('EEG', eeg)
@@ -134,16 +135,17 @@ class EEGpreprocessing:
         return tags_type, event_type
 
 
-    def prepare(self, threshold = 50.0, Fs = 256, exp_trial_tag = 1) -> None:
+    def prepare(self, threshold = 50.0, Fs = 768, exp_trial_tag = 1,start_at = 0) -> None:
         """Gets events from preprocessed signal.
         
         Combines all processing methods and outputs binary files.
         Shape of saved file is Events x Channels x 256 samples (Fs=256Hz)
 
         """
+        os.makedirs(self.output_path, exist_ok = True)
 
-        for (file,name) in zip(self.files, self.file_name):
-            if name + '.npy' not in os.listdir('C:/data/eegan/binary/'):
+        for (file,name) in tqdm([m for m in zip(self.files, self.file_name)][start_at:] ):
+            if name + '.npy' not in os.listdir(self.output_path):
                 raw = mne.io.read_raw_eeglab(file, eog='auto', preload=True)
                 mne.set_bipolar_reference(raw, 'A1', 'A2')
                 Fs=raw.info['sfreq']
@@ -169,18 +171,16 @@ class EEGpreprocessing:
                     init_mean = crop_data_values[:int(0.2 * Fs_int)].mean()
                     events[i,:,:] = crop_data_values - init_mean
 
-                clean_signal = self._setthreshold(signal=events, threshold = treshold)
-                np.save(file=f'C:/data/eegan/binary/{name}.npy', arr=clean_signal)
+                clean_signal = self._setthreshold(signal=events, threshold = threshold)
+                np.save(file=f'{self.output_path}/{name}.npy', arr=clean_signal)
 
                 # Save csv for each subject
                 tags_type, event_type = self._read_tag(file)
                 df = pd.DataFrame(tags_type)
                 df = df.loc[df.block!=0,:]
-                df.to_csv(f'C:/data/eegan/binary/{name}_tags.csv')
-
-
+                df.to_csv(f'{self.output_path}/{name}_tags.csv',encoding='utf-8')
 
 if __name__ == "__main__":
 
-    data = EEGpreprocessing(path = 'C:/data/eegan')
+    data = EEGpreprocessing(path = 'C:/data/eegan',output_path = 'C:/data/eegan/binary')
     data.prepare()
