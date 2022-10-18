@@ -134,7 +134,7 @@ class EEGpreprocessing:
         return tags_type, event_type
 
 
-    def prepare(self, threshold = 50.0, Fs: int, exp_trial_tag = 1) -> None:
+    def prepare(self, threshold = 50.0, Fs = 256, exp_trial_tag = 1) -> None:
         """Gets events from preprocessed signal.
         
         Combines all processing methods and outputs binary files.
