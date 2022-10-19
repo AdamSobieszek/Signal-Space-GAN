@@ -90,26 +90,6 @@ rng = np.random.RandomState(args.seed)
 
 data = ProcessedEEGDataset(args.data_path)
 
-# if not os.path.exists(compiled_data_path):
-#     from dataset.dataset import EEGDataClass
-#
-#     dc = EEGDataClass(data_path)
-#
-#     train = np.vstack([e[0] for e in dc.events])
-#     target = np.ones(train.shape[0]).astype(int)
-#     data_tuple = (train, target)
-#     pickle.dump(data_tuple, open(compiled_data_path, 'wb'))
-#
-# train, target = pickle.load(open(compiled_data_path, 'rb'))
-#
-# train = train[:, None, :, None].astype(np.float32)
-#
-# train = train - train.mean()
-# train = train / train.std()
-
-# dodać assera żeby się nie zgubiło
-
-
 modelname = 'Progressive%s'
 if not os.path.exists(args.model_path):
     os.makedirs(args.model_path)
