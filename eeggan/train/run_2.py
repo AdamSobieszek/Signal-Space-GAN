@@ -47,6 +47,7 @@ parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg",
 parser.add_argument('--model_path', type=str, default = './test.cnt',                                               help = 'model path')
 
 # generator and discriminator arguments
+parser.add_argument('--l_r', type=int, default=0.0001, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
 parser.add_argument('--batch_size', type=int, default=(2648 * 8), help='number of epochs')
@@ -55,7 +56,6 @@ parser.add_argument('--in_filters', type=int, default=50, help='number of epochs
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--factor', type=int, default=2, help='number of epochs')
 parser.add_argument('--num_map_layer', type=int, default=2, help='number of epochs')
-
 
 # scheduler
 parser.add_argument("--scheduler", type = bool, default=False,                                                      help = "scheduler")

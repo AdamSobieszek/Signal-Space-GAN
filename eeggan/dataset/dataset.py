@@ -46,7 +46,7 @@ class ProcessedEEGDataset:
         return len(self.files)
 
     def __getitem__(self, index) -> np.ndarray:
-        filepath = self.files[index]
-        data = np.load(file=filepath)
+        array = self.files[index]
+        data = array
 
         return data
