@@ -5,13 +5,13 @@ import torch.autograd as autograd
 import eeggan.utils.util as utils
 from torch.autograd import Variable
 from torch import optim
-from progressive import(
+from eeggan.modules.progressive import(
     ProgressiveGenerator,
     GeneratorBlocks,
     ProgressiveDiscriminator,
     DiscriminatorBlocks
 )
-from layers.mapping_network import MappingNetwork
+from eeggan.modules.layers.mapping_network import MappingNetwork
 
 
 class GAN_Module(nn.Module):
@@ -67,7 +67,6 @@ class GAN_Module(nn.Module):
 class WGAN_I_Discriminator(GAN_Module):
     """
     Improved Wasserstein GAN discriminator
-
     References
     ----------
     Gulrajani, I., Ahmed, F., Arjovsky, M., Dumoulin, V., & Courville, A. (2017).
@@ -79,10 +78,12 @@ class WGAN_I_Discriminator(GAN_Module):
 
     def train_init(self,alpha=1e-4,betas=(0.5,0.9),
                    lambd=10,one_sided_penalty=False,distance_weighting=False,
-                   eps_drift=0.,eps_center=0.,lambd_consistency_term=0.):
+                   eps_drift=0.,eps_center=0.,lambd_consistency_term=0.,
+                   scheduler = False,
+                   warmup_steps = 600,
+                   num_steps = 1000):
         """
         Initialize Adam optimizer for discriminator
-
         Parameters
         ----------
         alpha : float, optional
@@ -103,7 +104,6 @@ class WGAN_I_Discriminator(GAN_Module):
         eps_center : float, optional
             Weight to keep discriminator centered at 0
             See Hartmann et al., 2018 (default: 0.)
-
         References
         ----------
         Karras, T., Aila, T., Laine, S., & Lehtinen, J. (2017).
@@ -114,8 +114,16 @@ class WGAN_I_Discriminator(GAN_Module):
         (EEG) brain signals. Retrieved from https://arxiv.org/abs/1806.01875
         """
         # super(WGAN_I_Discriminator,self).train_init(alpha,betas)
+        self.alpha = alpha
+        self.betas = betas
+        self.warmup_steps = warmup_steps
+        self.num_steps = num_steps
 
-        self.optimizer = optim.Adam(self.parameters(),lr=alpha,betas=betas)
+        self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
+        if scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = self.num_steps)
         self.loss = torch.nn.BCELoss()
         self.did_init_train = True
 
@@ -126,6 +134,7 @@ class WGAN_I_Discriminator(GAN_Module):
         self.eps_drift = eps_drift
         self.eps_center = eps_center
         self.lambd_consistency_term = lambd_consistency_term
+
 
 
     def pre_train(self):
@@ -139,19 +148,27 @@ class WGAN_I_Discriminator(GAN_Module):
 
     def update_parameters(self):
         self.optimizer.step()
+        if self.scheduler:
+            self.scheduler.step()
+
+    def reset_parameters(self, new_num_steps):
+        self.optimizer = optim.Adam(self.parameters(),lr = self.alpha, betas = self.betas)
+        if self.scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = new_num_steps)
+
 
 
     def train_batch(self, batch_real, batch_fake):
         """
         Train discriminator for one batch of real and fake data
-
         Parameters
         ----------
         batch_real : autograd.Variable
             Batch of real data
         batch_fake : autograd.Variable
             Batch of fake data
-
         Returns
         -------
         loss_real : float
@@ -218,14 +235,12 @@ class WGAN_I_Discriminator(GAN_Module):
     def calc_gradient_penalty(self, batch_real, batch_fake):
         """
         Improved WGAN gradient penalty
-
         Parameters
         ----------
         batch_real : autograd.Variable
             Batch of real data
         batch_fake : autograd.Variable
             Batch of fake data
-
         Returns
         -------
         gradient_penalty : autograd.Variable
@@ -259,7 +274,6 @@ class WGAN_I_Discriminator(GAN_Module):
 class WGAN_I_Generator(GAN_Module):
     """
     Improved Wasserstein GAN generator
-
     References
     ----------
     Gulrajani, I., Ahmed, F., Arjovsky, M., Dumoulin, V., & Courville, A. (2017).
@@ -269,10 +283,12 @@ class WGAN_I_Generator(GAN_Module):
     def __init__(self):
         super(WGAN_I_Generator, self).__init__()
 
-    def train_init(self,alpha=1e-4,betas=(0.5,0.9)):
+    def train_init(self, alpha=1e-4, betas=(0.5,0.9),
+                   scheduler = None,
+                   warmup_steps = 600,
+                   num_steps = 400):
         """
         Initialize Adam optimizer for generator
-
         Parameters
         ----------
         alpha : float, optional
@@ -280,8 +296,21 @@ class WGAN_I_Generator(GAN_Module):
         betas : (float,float), optional
             Betas for Adam
         """
-        self.loss = None
+        self.alpha = alpha
+        self.betas = betas
+        self.warmup_steps = warmup_steps
+        self.num_steps = num_steps
+
         self.optimizer = optim.Adam(self.parameters(),lr=alpha,betas=betas)
+
+        self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
+        if scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                num_warmup_steps = self.warmup_steps,
+                                                num_training_steps = self.num_steps)
+
+        self.loss = None
+
         self.did_init_train = True
 
     def pre_train(self,discriminator):
@@ -295,18 +324,25 @@ class WGAN_I_Generator(GAN_Module):
 
     def update_parameters(self):
         self.optimizer.step()
+        if self.scheduler:
+            self.scheduler.step()
+
+    def reset_parameters(self, new_num_steps):
+        self.optimizer = optim.Adam(self.parameters(), lr=self.alpha, betas=self.betas)
+        if self.scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                             num_warmup_steps=self.warmup_steps,
+                                                             num_training_steps=new_num_steps)
 
     def train_batch(self, batch_noise, discriminator):
         """
         Train generator for one batch of latent noise
-
         Parameters
         ----------
         batch_noise : autograd.Variable
             Batch of latent noise
         discriminator : nn.Module
             Discriminator to evaluate realness of generated data
-
         Returns
         -------
         loss : float
@@ -335,7 +371,7 @@ class WGAN_I_Generator(GAN_Module):
 class Generator(WGAN_I_Generator):
     def __init__(
         self, n_blocks:int, n_chans:int,
-        z_vars:int, in_filters:int,
+        n_z:int, in_filters:int,
         out_filters:int, factor:int,
         num_map_layers:int
     ):
@@ -344,7 +380,7 @@ class Generator(WGAN_I_Generator):
         blocks = GeneratorBlocks(
             n_blocks=n_blocks,
             n_chans=n_chans,
-            z_vars=z_vars,
+            z_vars=n_z,
             in_filters=in_filters,
             out_filters=out_filters,
             factor=factor
@@ -352,7 +388,7 @@ class Generator(WGAN_I_Generator):
 
         self.model = ProgressiveGenerator(blocks)
         self.mapping = MappingNetwork(
-            z_vars, z_vars,
+            n_z, n_z,
             num_map_layers=num_map_layers
         )
 

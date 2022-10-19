@@ -45,7 +45,7 @@ class MappingNetwork(torch.nn.Module):
     def __init__(self,
                  z_dim,
                  w_dim,
-                 num_layers = 8,
+                 num_layers = 2,
                  intermediete_layer_features = None,
                  activation = 'lrelu',
                  lr_multiplier = 0.01,
