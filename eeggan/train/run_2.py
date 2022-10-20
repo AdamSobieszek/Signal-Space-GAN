@@ -43,7 +43,7 @@ parser.add_argument('--n_batch', type=int, default=2648 * 8,                    
 
 # paths
 parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
-parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg",                                     help = 'path to binary data')
+parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg2",                                     help = 'path to binary data')
 parser.add_argument('--model_path', type=str, default = './test.cnt',                                               help = 'model path')
 
 # generator and discriminator arguments
@@ -141,7 +141,10 @@ for i_block in range(i_block_tmp, args.n_blocks): ################# for blocks
         for idx in range(len(data)):
             collate_loss_d = []
             collate_loss_g = []
+            # unsqueeze -1
             train = data[idx]
+            train = np.expand_dims(train, -1)
+            print("Size of the training set:",train.shape)
             # RESHAPE DATA ############################################################################################
 
             with torch.no_grad():
