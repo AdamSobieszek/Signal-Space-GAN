@@ -48,10 +48,8 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 output = generator(z_vars)
 
                 batch_fake = output.data.requires_grad_(True).cuda()
-                print(batch_fake.shape)
-                print(batch_real.shape)
 
-                loss_d = discriminator.train_batch(batch_real, batch_fake)
+                loss_d = discriminator.train_batch(batch_real, batch_fake) ## TUTAJ ERROR!!
 
 
                 if idx == n_critic:
