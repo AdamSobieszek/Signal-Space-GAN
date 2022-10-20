@@ -36,9 +36,11 @@ class ProcessedEEGDataset:
                 if file.endswith('.npy'):
                     self.files.append(np.load(file=os.path.join(folderpath, file)))
                 elif file.endswith('.csv'):
-                    self.csvs.append(pd.read_csv(os.path.join(folderpath,file)))
+                    self.csvs.append(pd.read_csv(os.path.join(folderpath,file),encoding='utf-8'))
             except FileNotFoundError as e:
                 print(file)
+        self.files = np.vstack(self.files)
+        self.files = torch.FloatTensor(np.expand_dims(self.files,-1))
 
 
 
