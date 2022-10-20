@@ -239,7 +239,7 @@ class DiscriminatorBlocks(nn.Module):
                 tmp_block = ProgressiveDiscriminatorBlock(
                     nn.Sequential(StdMap1d(),
                                   self.create_conv_sequence(),
-                                  Reshape([[0], -1]),
+                                  Reshape([[0], 50]),
                                   weight_scale(nn.Linear(50 * 12, 1),
                                                gain=calculate_gain('linear'))),
                     self.create_out_sequence(),
