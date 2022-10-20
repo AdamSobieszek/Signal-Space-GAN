@@ -1,91 +1,90 @@
 import torch
-from braindecode.datautil.iterators import get_balanced_batches
 from torch.autograd import Variable
 import wandb
+from torch.utils.data import DataLoader
 
 
-def training_loop(i_block_tmp, n_blocks, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, rng, n_batch, device, wandb_enabled = False, jobid,
-                  wandb_project, entity):
-
-    if wandb_enabled:
-        wandb.init(project = wandb_project, entity = entity)
-        wandb.watch(generator, log_freq=5)
+def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
+                  rampup, fade_alpha, n_critic, rng, n_batch, device, jobid, wandb_enabled = False):
     for i_block in range(i_block_tmp, n_blocks):  ################# for blocks
         print("-----------------")
 
         c = 0
+        full_epoch = ((len(data)//n_batch)+1)//n_critic
+        try:
+            _ = 1/full_epoch
+        except:
+            raise(Exception("Too many critic steps for this batch size and dataset size, decrease batch size or rewrite the code"))
 
         for i_epoch in tqdm(range(i_epoch_tmp, block_epochs[i_block])):  ################## for epochs
             i_epoch_tmp = 0
-            for idx in range(len(data)):
+
+            if fade_alpha < 1 and i_epoch%full_epoch == 0:
+                fade_alpha += 1. / rampup
+                generator.model.alpha = fade_alpha
+                discriminator.model.alpha = fade_alpha
+
+
+            for idx, train_batch in enumerate(DataLoader(data, batch_size=n_batch, shuffle=True)):
                 collate_loss_d = []
                 collate_loss_g = []
-                train = data[idx]
                 # RESHAPE DATA ############################################################################################
 
                 with torch.no_grad():
-                    train_tmp = discriminator.model.downsample_to_block(
+                    train_batches = discriminator.model.downsample_to_block(
                         # downsample the training data to the current block
-                        torch.from_numpy(train).to(device),
+                        train_batch.to(device),
                         discriminator.model.cur_block
-                    ).data.cpu()
+                    ).data
 
-                if fade_alpha < 1:
-                    fade_alpha += 1. / rampup
-                    generator.model.alpha = fade_alpha
-                    discriminator.model.alpha = fade_alpha
+                batch_real = train_batches.requires_grad_(True).cuda()
+                batch_real = batch_real.unsqueeze(1)
 
-                batches = get_balanced_batches(train.shape[0], rng, True, batch_size=n_batch)  # get the batches
-                iters = max(int(len(batches) / n_critic), 1)  # get the number of iterations
+                z_vars = rng.normal(0, 1, size=(len(train_batches), n_z)).astype(
+                    np.float32)
+                with torch.no_grad():
+                    z_vars = torch.from_numpy(z_vars).cuda()
 
-                for it in range(iters):  ##################for iterations
-                    # critic training
-                    for i_critic in range(n_critic):  # ############################## for critics
-                        try:
-                            train_batches = train_tmp[batches[it * n_critic + i_critic]]  # get the batch
-                        except IndexError:
-                            continue
-                        # LOOP
-                        batch_real = train_batches.requires_grad_(True).cuda()
+                output = generator(z_vars)
 
-                        z_vars = rng.normal(0, 1, size=(len(batches[it * n_critic + i_critic]), n_z)).astype(
-                            np.float32)
-                        with torch.no_grad():
-                            z_vars = torch.from_numpy(z_vars).cuda()
+                batch_fake = output.data.requires_grad_(True).cuda()
+                print(batch_fake.shape)
+                print(batch_real.shape)
 
-                        output = generator(z_vars)
+                loss_d = discriminator.train_batch(batch_real, batch_fake)
 
-                        batch_fake = output.data.requires_grad_(True).cuda()
 
-                        loss_d = discriminator.train_batch(batch_real, batch_fake)
+                if idx == n_critic:
+                    #Break if critic got the given number of training steps
+                    break
 
-                    # generator training
-                    z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
-                    z_vars = z_vars.requires_grad_(True).cuda()
-                    loss_g = generator.train_batch(z_vars, discriminator)
-                    collate_loss_d.append(loss_d)
-                    collate_loss_g.append(loss_g)
+            # generator training
+            z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
+            z_vars = z_vars.requires_grad_(True).cuda()
+            loss_g = generator.train_batch(z_vars, discriminator)
+            collate_loss_d.append(loss_d)
+            collate_loss_g.append(loss_g)
 
-            loss_d = [np.mean([l[0] for l in collate_loss_d]), np.mean([l[1] for l in collate_loss_d]),
-                      np.mean([l[2] for l in collate_loss_d])]
-            loss_g = np.mean(collate_loss_g)
+            if i_epoch%full_epoch==0: # Dont save losses too often
+                loss_d = [np.mean([l[0] for l in collate_loss_d]), np.mean([l[1] for l in collate_loss_d]),
+                          np.mean([l[2] for l in collate_loss_d])]
+                loss_g = np.mean(collate_loss_g)
 
-            losses_d.append(loss_d)
-            losses_g.append(loss_g)
+                losses_d.append(loss_d)
+                losses_g.append(loss_g)
 
-            if wandb_enabled:
-                wandb.log(
-                    {
-                        "Learning_rate": generator.optimizer,
-                        "Loss_F": loss_d[0],
-                        "Loss_R": loss_d[1],
-                        "Penalty": loss_d[2],
-                        "Generator Loss": loss_g
-                    }
-                )
+                if wandb_enabled:
+                    wandb.log(
+                        {
+                            "Learning_rate": generator.optimizer,
+                            "Loss_F": loss_d[0],
+                            "Loss_R": loss_d[1],
+                            "Penalty": loss_d[2],
+                            "Generator Loss": loss_g
+                        }
+                    )
 
-            if i_epoch % 10 == 0:
+            if i_epoch % (10)*full_epoch == 0:
                 generator.eval()
                 discriminator.eval()
 
@@ -114,7 +113,7 @@ def training_loop(i_block_tmp, n_blocks, discriminator, generator, data, i_epoch
         generator.model.cur_block += 1
         discriminator.model.cur_block -= 1
 
-        args.n_critic += 1
+        n_critic += 1
         if i_block in [0, 1, 2]:
             n_batch //= 3
         if i_block in [3]:
@@ -122,5 +121,5 @@ def training_loop(i_block_tmp, n_blocks, discriminator, generator, data, i_epoch
         print(n_batch)
 
         # reset learning rate and scheduler for next block
-        discriminator.reset_parameters(new_num_steps=args.block_epochs[i_block] * len(data) * n_batch)
-        generator.reset_parameters(new_num_steps=args.block_epochs[i_block] * len(data) * (n_batch / n_critic)
+        discriminator.reset_parameters(new_num_steps=block_epochs[i_block] * len(data) * n_batch)
+        generator.reset_parameters(new_num_steps=block_epochs[i_block] * len(data) * (n_batch / n_critic))
