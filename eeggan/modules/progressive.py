@@ -317,7 +317,7 @@ class GeneratorBlocks(nn.Module):
                             nn.Linear(self.z_vars, self.in_filters * 12),
                             gain=calculate_gain('leaky_relu')),
                         nn.LeakyReLU(0.2),
-                        Reshape([[0], self.in_filters, -1]),
+                        Reshape([[0], self.in_filters, 50]),
                         self.create_conv_sequence()),
                     self.create_out_sequence(),
                     self.create_fade_sequence()

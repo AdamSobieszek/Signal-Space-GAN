@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-
+import torch
 
 class LazyPerPersonEEGDataset:
     def __init__(self, folderpath = r'../../data/binary'):
