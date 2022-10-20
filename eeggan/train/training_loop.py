@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Variable
 import wandb
 from torch.utils.data import DataLoader
-
+from tqdm import tqdm
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
                   rampup, fade_alpha, n_critic, rng, n_batch, device, jobid, wandb_enabled = False):

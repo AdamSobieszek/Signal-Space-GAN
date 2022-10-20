@@ -91,8 +91,8 @@ modelname = 'Progressive%s'
 if not os.path.exists(args.model_path):
     os.makedirs(args.model_path)
 
-generator = Generator(n_blocks, n_chans, z_vars, factor, num_map_layer)
-discriminator = Discriminator(n_blocks, n_chans, in_filters, out_filters, factor)
+generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
+discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 
 num_steps_discriminator = args.block_epochs[0] * len(data) * args.n_batch
 num_steps_generator = args.block_epochs[0] * len(data) * (args.n_batch / args.n_critic)
