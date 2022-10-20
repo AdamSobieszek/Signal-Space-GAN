@@ -37,15 +37,15 @@ parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 40
 parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of batches')
 
 # paths
-parser.add_argument('--cuda_path', type=str, default=r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.3",
-                    help='path to CUDA')
-parser.add_argument('--data_path', type=str, default=r"C:\data\eegan\binary", help='path to binary data')
-parser.add_argument('--model_path', type=str, default='./test.cnt', help='model path')
+parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
+parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg2",                                     help = 'path to binary data')
+parser.add_argument('--model_path', type=str, default = './test.cnt',                                               help = 'model path')
 
 # generator and discriminator arguments
+parser.add_argument('--l_r', type=int, default=0.0001, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
-parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of epochs')
+parser.add_argument('--batch_size', type=int, default=(2648 * 8), help='number of epochs')
 parser.add_argument('--n_z', type=int, default=16, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
@@ -86,22 +86,6 @@ rng = np.random.RandomState(args.seed)
 
 data = ProcessedEEGDataset(args.data_path)
 
-# if not os.path.exists(compiled_data_path):
-#     from dataset.dataset import EEGDataClass
-#
-#     dc = EEGDataClass(data_path)
-#
-#     train = np.vstack([e[0] for e in dc.events])
-#     target = np.ones(train.shape[0]).astype(int)
-#     data_tuple = (train, target)
-#     pickle.dump(data_tuple, open(compiled_data_path, 'wb'))
-#
-# train, target = pickle.load(open(compiled_data_path, 'rb'))
-#
-# train = train[:, None, :, None].astype(np.float32)
-#
-# train = train - train.mean()
-# train = train / train.std()
 
 modelname = 'Progressive%s'
 if not os.path.exists(args.model_path):
@@ -126,8 +110,8 @@ i_block_tmp = 0
 i_epoch_tmp = 0
 generator.model.cur_block = i_block_tmp
 discriminator.model.cur_block = args.n_blocks - 1 - i_block_tmp
-generator.model.alpha = fade_alpha
-discriminator.model.alpha = fade_alpha
+generator.model.alpha = args.fade_alpha
+discriminator.model.alpha = args.fade_alpha
 # print("Size of the training set:",train.shape)
 
 
@@ -139,6 +123,5 @@ discriminator.train()
 
 
 
-training_loop(args.i_block_tmp, args.n_blocks, discriminator, generator, data, args.i_epoch_tmp, args.block_epochs,
-              args.rampup, args.fade_alpha, args.m_critic, args.rng, args.n_batch, device, args.wandb_enabled,
-              args.jobid, args.wandb_project, args.entity)
+training_loop(i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, i_epoch_tmp, args.block_epochs,
+              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = False)
