@@ -130,7 +130,6 @@ discriminator.train()
 #     wandb.watch(generator, log_freq=5)
 
 
-################# DUUUUUPAAAAAAAA ####################
 
 for i_block in range(i_block_tmp, args.n_blocks): ################# for blocks
     print("-----------------")
