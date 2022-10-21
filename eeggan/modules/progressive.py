@@ -147,7 +147,7 @@ class ProgressiveDiscriminatorBlock(nn.Module):
     def forward(self, input, first=False):
         if first:
             input = self.in_sequence(input)
-        out = self.intermediate_sequence(input)
+        out = self.intermediate_sequence(input) ## error
         return out
 
 
