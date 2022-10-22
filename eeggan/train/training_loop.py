@@ -98,11 +98,12 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 print('Epoch: %d   Loss_F: %.10f   Loss_R: %.10f   Penalty: %.10f   Loss_G: %.10f' % (
                     i_epoch, loss_d[0], loss_d[1], loss_d[2], loss_g))
 
-                freqs_tmp = np.fft.rfftfreq(batch_real.cpu().detach().numpy().shape[2],
-                                            d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
-                # train_fft = np.fft.rfft(batch_real.numpy(), axis=2)
-                train_amps = np.abs(freqs_tmp).mean(axis=3).mean(axis=0).squeeze()
+                # freqs_tmp = np.fft.rfftfreq(batch_real.cpu().detach().numpy().shape[2],
+                #                             d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
+                freqs_tmp = np.fft.rfft(batch_real.cpu().detach().data.cpu().numpy(), axis=2)
+                train_amps = np.abs(freqs_tmp).mean(axis=3).squeeze()
                 fake_fft = np.fft.rfft(batch_fake.cpu().detach().data.cpu().numpy(), axis=2)
+
                 batch_fake = batch_fake.cpu().detach().data.cpu().numpy()
 
                 plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,

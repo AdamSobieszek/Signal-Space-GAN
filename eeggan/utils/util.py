@@ -59,16 +59,16 @@ def weight_filler(m):
 
 def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps):
     # debuger pdb
-    import pdb; pdb.set_trace()
-    fake_amps = np.abs(fake_fft).mean(axis=3).mean(axis=0).squeeze()
+    # import pdb; pdb.set_trace()
+    fake_amps = np.abs(fake_fft).mean(axis=3).squeeze()
 
     plt.figure()
-    plt.plot(freqs_tmp, np.log(fake_amps), label='Fake')
-    plt.plot(freqs_tmp, np.log(train_amps), label='Real')
+    plt.plot(freqs_tmp.squeeze(), np.log(fake_amps), label='Fake')
+    plt.plot(freqs_tmp.squeeze(), np.log(train_amps), label='Real')
     plt.title(f'Frequency Spektrum, block {i_block}')
     plt.xlabel('Hz')
     plt.legend()
-    plt.savefig(os.path.join(model_path, model_name % jobid + '_fft_%d_%d.png' % (i_block, i_epoch)))
+    plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '_fft_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg'))
     plt.close()
 
     plt.figure(figsize=(10, 10))
