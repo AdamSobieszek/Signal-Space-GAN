@@ -400,6 +400,7 @@ class Generator(WGAN_I_Generator):
             num_layers=num_map_layers
         )
         self.num_map_layers = num_map_layers
+        self.pl_mean = 0
 
     def forward(self,input, truncation_psi = 1):
         if self.num_map_layers ==0:
