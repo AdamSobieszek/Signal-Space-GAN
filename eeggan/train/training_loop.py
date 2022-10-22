@@ -10,12 +10,13 @@ from utils.util import plot_stuff
 
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, rng, n_batch, device, jobid, wandb_enabled = False,
-                  model_path = None, model_name = None):
+                  rampup, fade_alpha, n_critic, rng, device, jobid, wandb_enabled = False,
+                  model_path = None, model_name = None, batch_list = None):
     losses_g = []
     losses_d = []
     for i_block in range(i_block_tmp, n_blocks):  ################# for blocks
         print("-----------------")
+        n_batch = batch_list[i_block]
 
         c = 0
         full_epoch = ((len(data)//n_batch)+1)//n_critic

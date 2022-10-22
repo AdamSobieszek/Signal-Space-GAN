@@ -33,7 +33,7 @@ parser.add_argument('--n_critic', type=int, default=2, help='starting number of 
 parser.add_argument('--rampup', type=int, default=100, help='alpha args.rampup')
 parser.add_argument('--seed', type=int, default=0, help='number of epochs')
 parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 400, 800], help='epochs per block')
-parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of batches')
+parser.add_argument('--batch_block_list', type=list, default=[2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2], help='batch size per block')
 
 # paths
 parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
@@ -56,8 +56,8 @@ parser.add_argument('--num_map_layer', type=int, default=2, help='number of epoc
 parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")
 
 
-parser.add_argument("--i_block_temp", type=int, default=0, help="warmup steps")
-parser.add_argument("--i_epoch_temp", type=int, default=0, help="warmup steps")
+parser.add_argument("--i_block_tmp", type=int, default=0, help="warmup steps")
+parser.add_argument("--i_epoch_tmp", type=int, default=0, help="warmup steps")
 parser.add_argument("--fade_alpha", type=float, default=1.0, help="warmup steps")
 
 # stuff
@@ -106,10 +106,8 @@ discriminator.train_init(alpha=args.l_r, betas=(0., 0.99), eps_center=0.001,
 generator = generator.apply(weight_filler)
 discriminator = discriminator.apply(weight_filler)
 
-i_block_tmp = 0
-i_epoch_tmp = 0
-generator.model.cur_block = i_block_tmp
-discriminator.model.cur_block = args.n_blocks - 1 - i_block_tmp
+generator.model.cur_block = args.i_block_tmp
+discriminator.model.cur_block = args.n_blocks - 1 - args.i_block_tmp
 generator.model.alpha = args.fade_alpha
 discriminator.model.alpha = args.fade_alpha
 # print("Size of the training set:",train.shape)
@@ -123,6 +121,6 @@ discriminator.train()
 
 
 
-training_loop(i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, i_epoch_tmp, args.block_epochs,
-              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = True,
-              model_path = args.model_path, model_name = args.model_name)
+training_loop(args.i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, args.i_epoch_tmp, args.block_epochs,
+              args.rampup, args.fade_alpha, args.n_critic, rng, device, args.jobid, wandb_enabled = True,
+              model_path = args.model_path, model_name = args.model_name, batch_list = args.batch_block_list)

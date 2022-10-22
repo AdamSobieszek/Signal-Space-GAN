@@ -70,6 +70,7 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
     # plt.legend()
     # plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '_fft_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg'))
     # plt.close()
+    # pdn debuger
 
     plt.figure(figsize=(10, 10))
     plt.title(f'Fake samples, block {i_block}')
@@ -79,5 +80,12 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
         plt.xticks((), ())
         plt.yticks((), ())
     plt.subplots_adjust(hspace=0)
-    plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '_fakes_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg'))
+    # check if file exists
+    import pdb; pdb.set_trace()
+
+    if os.path.isfile(os.path.join(model_path, model_name + '%' + str(jobid) + '_fake_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg')):
+        os.remove(os.path.join(model_path, model_name + '%' + str(jobid) + '%' + str(i_block) + str(i_epoch) + '_fake_%d_%d.png'))
+    plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '%' + str(i_block) + str(i_epoch) + '_fakes_%d_%d.png'))
     plt.close()
+
+    plt.savefig(os.path.join(model_path, 'aaaa.jpg'))
