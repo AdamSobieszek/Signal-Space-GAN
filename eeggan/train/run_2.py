@@ -50,7 +50,7 @@ parser.add_argument('--n_z', type=int, default=16, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--factor', type=int, default=2, help='number of epochs')
-parser.add_argument('--num_map_layer', type=int, default=2, help='number of epochs')
+parser.add_argument('--num_map_layer', type=int, default=0, help='number of epochs')
 
 # scheduler
 parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")

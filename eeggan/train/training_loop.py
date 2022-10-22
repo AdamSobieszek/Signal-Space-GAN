@@ -86,7 +86,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                             "generator l_r": generator.optimizer.param_groups[0]['lr'],
                             "discriminator l_r": discriminator.optimizer.param_groups[0]['lr'],
                             "Loss_F": loss_d[0],
-                            "Loss_R": loss_d[1],
+                            "Discriminator Loss": loss_d[1],
                             "Penalty": loss_d[2],
                             "Generator Loss": loss_g
                         }
@@ -116,11 +116,11 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 generator.eval()
                 discriminator.eval()
 
-            discriminator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.disc'))
-            generator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.gen'))
+                discriminator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.disc'))
+                generator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.gen'))
 
-            generator.train()
-            discriminator.train()
+                generator.train()
+                discriminator.train()
 
         fade_alpha = 0.
         generator.model.cur_block += 1

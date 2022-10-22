@@ -58,7 +58,7 @@ class MappingNetwork(torch.nn.Module):
         self.w_avg_beta = w_avg_beta
         if intermediete_layer_features == None:
             intermediete_layer_features = [w_dim] * (num_layers - 1) # List of intermediete layers dimensionality, if = None equal to w_dim
-        assert(len(intermediete_layer_features) == num_layers - 1) # Check that the number of layers is correct
+        # assert(len(intermediete_layer_features) == num_layers - 1) # Check that the number of layers is correct
 
         features_list = [z_dim] + intermediete_layer_features + [w_dim] # List of features for each layer
 
