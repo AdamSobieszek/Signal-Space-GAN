@@ -94,8 +94,8 @@ if not os.path.exists(args.model_path):
 generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
 discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 
-num_steps_discriminator = args.block_epochs[0]
-num_steps_generator = args.block_epochs[0] * args.n_critic
+num_steps_discriminator = args.block_epochs[0] * args.n_critic
+num_steps_generator = args.block_epochs[0]
 
 generator.train_init(alpha=args.l_r, betas=(0., 0.99), scheduler=args.scheduler, warmup_steps = num_steps_generator / 10,
                      num_steps=num_steps_generator)

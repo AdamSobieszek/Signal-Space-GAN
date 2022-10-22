@@ -60,7 +60,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 loss_d = discriminator.train_batch(batch_real, batch_fake) ## TUTAJ ERROR!!
 
 
-                if idx == n_critic:
+                if idx == n_critic - 1 :
                     #Break if critic got the given number of training steps
                     break
 
@@ -123,5 +123,5 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
 
         # reset learning rate and scheduler for next block
-        discriminator.reset_parameters(new_num_steps = block_epochs[i_block], new_warmup_steps = block_epochs[i_block] / 10)
-        generator.reset_parameters(new_num_steps = args.block_epochs[i_block] * args.n_critic, new_warmup_steps= (args.block_epochs[i_block] * args.n_critic) / 10)
+        discriminator.reset_parameters(new_num_steps = block_epochs[i_block] * n_critic, new_warmup_steps = (block_epochs[i_block] * n_critic) / 10)
+        generator.reset_parameters(new_num_steps = block_epochs[i_block], new_warmup_steps= block_epochs[i_block] / 10)
