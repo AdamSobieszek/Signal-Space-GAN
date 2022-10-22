@@ -13,7 +13,8 @@ Karras, T., Aila, T., Laine, S., & Lehtinen, J. (2017).
 Progressive Growing of GANs for Improved Quality, Stability, and Variation.
 Retrieved from http://arxiv.org/abs/1710.10196
 """
-
+def checker():
+    print('bop')
 
 class ProgressiveDiscriminator(nn.Module):
     """
@@ -53,6 +54,7 @@ class ProgressiveDiscriminator(nn.Module):
                 fade = True
 
             if fade and i == self.cur_block + 1:
+                print(input.shape)
                 input = alpha * input + (1. - alpha) * tmp
 
             input = self.blocks[i](input,
@@ -222,6 +224,29 @@ class DiscriminatorBlocks(nn.Module):
             nn.LeakyReLU(0.2)
         )
 
+    def create_primary_conv_sequence(self):
+        return nn.Sequential(
+            weight_scale(nn.Conv1d(51,
+                                   50,
+                                   9,
+                                   padding=4),
+                         gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            weight_scale(nn.Conv1d(50,
+                                   50,
+                                   9,
+                                   padding=4),
+                         gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2),
+            weight_scale(nn.Conv1d(50,
+                                   50,
+                                   2,
+                                   stride=2),
+                         gain=calculate_gain('leaky_relu')),
+            nn.LeakyReLU(0.2)
+        )
+
+
     def create_out_sequence(self):
         return nn.Sequential(
             weight_scale(nn.Conv2d(1, self.out_filters, (1, self.n_chans)),
@@ -238,8 +263,9 @@ class DiscriminatorBlocks(nn.Module):
             if i == self.n_blocks - 1:
                 tmp_block = ProgressiveDiscriminatorBlock(
                     nn.Sequential(StdMap1d(),
-                                  self.create_conv_sequence(),
-                                  Reshape([[0], 50]),
+                                  self.create_primary_conv_sequence(),
+                                  # Reshape([[0], [1], [2]]),
+                                  Reshape((-1, 50*12), override=True, print_shape = False),
                                   weight_scale(nn.Linear(50 * 12, 1),
                                                gain=calculate_gain('linear'))),
                     self.create_out_sequence(),

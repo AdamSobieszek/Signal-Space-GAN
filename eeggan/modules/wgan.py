@@ -118,6 +118,7 @@ class WGAN_I_Discriminator(GAN_Module):
         self.betas = betas
         self.warmup_steps = warmup_steps
         self.num_steps = num_steps
+        self.scheduler = scheduler
 
         self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
         if scheduler:
@@ -300,6 +301,7 @@ class WGAN_I_Generator(GAN_Module):
         self.betas = betas
         self.warmup_steps = warmup_steps
         self.num_steps = num_steps
+        self.scheduler = scheduler
 
         self.optimizer = optim.Adam(self.parameters(),lr=alpha,betas=betas)
 
@@ -407,8 +409,8 @@ class Discriminator(WGAN_I_Discriminator):
         prog = DiscriminatorBlocks(
             n_blocks=n_blocks,
             n_chans=n_chans,
-            in_filters=in_filters,
-            out_filters=out_filters,
+            in_filters=50,
+            out_filters=50,
             factor=factor
         )
         blocks = prog.get_blocks()

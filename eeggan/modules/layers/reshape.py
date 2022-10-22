@@ -12,16 +12,24 @@ class Reshape(nn.Module):
         New shape
         Follows numpy reshaping
     """
-    def __init__(self,shape):
+    def __init__(self,shape, message=None, override = False, print_shape = False):
         super(Reshape,self).__init__()
         self.shape = shape
+        self.message = message
+        self.override = override
+        self.print_shape = print_shape
 
     def forward(self,input):
+        if self.print_shape:
+            print("out size: ",input.size())
+        if self.override:
+            return input.view(self.shape)
         shape = list(self.shape)
         for i in range(len(shape)):
             if type(shape[i]) is list or type(shape[i]) is tuple:
                 assert len(shape[i])==1
                 shape[i] = input.size(shape[i][0])
+
         return input.view(shape)
 
 class PixelShuffle1d(nn.Module):

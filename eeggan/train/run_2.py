@@ -3,9 +3,7 @@
 
 import os
 import sys
-import pickle
 
-from tqdm import tqdm
 import sys
 
 sys.path.append('..')
@@ -19,6 +17,7 @@ import random
 import argparse
 from dataset.dataset import ProcessedEEGDataset
 from training_loop import training_loop
+import wandb
 
 matplotlib.use('TKAgg')  # for OSX
 
@@ -39,13 +38,14 @@ parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of bat
 # paths
 parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
 parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg2",                                     help = 'path to binary data')
-parser.add_argument('--model_path', type=str, default = './test.cnt',                                               help = 'model path')
+parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainhack',                                               help = 'model path')
+parser.add_argument('--model_name', type=str, default = 'test',                                               help = 'model path')
 
 # generator and discriminator arguments
 parser.add_argument('--l_r', type=int, default=0.0001, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
-parser.add_argument('--batch_size', type=int, default=(2648 * 8), help='number of epochs')
+parser.add_argument('--batch_size', type=int, default=100, help='number of epochs')
 parser.add_argument('--n_z', type=int, default=16, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
@@ -63,7 +63,7 @@ parser.add_argument("--fade_alpha", type=float, default=1.0, help="warmup steps"
 
 # stuff
 parser.add_argument("--mode", default='client', help="client or server")
-parser.add_argument("--port", default=52162, help="port")
+parser.add_argument("--port", default=52, help="port")
 parser.add_argument('--jobid', type=int, default=0, help='current run identifier')
 
 # WANDB
@@ -72,10 +72,11 @@ parser.add_argument("--wandb_project", default='eegan', help="wandb project")
 parser.add_argument("--entity", default='eegan', help="wandb entity")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 args = parser.parse_args()
 
 os.environ["CUDA_PATH"] = args.cuda_path
+if args.wandb_enabled:
+    wandb.init(project=args.wandb_project, entity=args.entity, config=args)
 
 # set seeds
 np.random.seed(args.seed)
@@ -124,4 +125,5 @@ discriminator.train()
 
 
 training_loop(i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, i_epoch_tmp, args.block_epochs,
-              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = False)
+              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = False,
+              model_path = args.model_path, model_name = args.model_name)

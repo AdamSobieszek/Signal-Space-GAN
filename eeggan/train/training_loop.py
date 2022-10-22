@@ -4,9 +4,15 @@ import wandb
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
+import os
+
+
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, rng, n_batch, device, jobid, wandb_enabled = False):
+                  rampup, fade_alpha, n_critic, rng, n_batch, device, jobid, wandb_enabled = False,
+                  model_path = None, model_name = None):
+    losses_g = []
+    losses_d = []
     for i_block in range(i_block_tmp, n_blocks):  ################# for blocks
         print("-----------------")
 
@@ -59,15 +65,15 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
             # generator training
             z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
-            z_vars = z_vars.requires_grad_(True).cuda()
+            z_vars = torch.Tensor(z_vars).cuda().requires_grad_(True)
             loss_g = generator.train_batch(z_vars, discriminator)
             collate_loss_d.append(loss_d)
             collate_loss_g.append(loss_g)
 
             if i_epoch%full_epoch==0: # Dont save losses too often
-                loss_d = [np.mean([l[0] for l in collate_loss_d]), np.mean([l[1] for l in collate_loss_d]),
-                          np.mean([l[2] for l in collate_loss_d])]
-                loss_g = np.mean(collate_loss_g)
+                loss_d = [np.mean([l[0].cpu() for l in collate_loss_d]), np.mean([l[1].cpu() for l in collate_loss_d]),
+                          np.mean([l[2].cpu() for l in collate_loss_d])]
+                loss_g = np.mean([l.cpu() for l in collate_loss_g])
 
                 losses_d.append(loss_d)
                 losses_g.append(loss_g)
@@ -87,23 +93,23 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 generator.eval()
                 discriminator.eval()
 
-                print('Epoch: %d   Loss_F: %.3f   Loss_R: %.3f   Penalty: %.4f   Loss_G: %.3f' % (
+                print('Epoch: %d   Loss_F: %.10f   Loss_R: %.10f   Penalty: %.10f   Loss_G: %.10f' % (
                     i_epoch, loss_d[0], loss_d[1], loss_d[2], loss_g))
 
-                freqs_tmp = np.fft.rfftfreq(train_tmp.numpy().shape[2],
-                                            d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
-                train_fft = np.fft.rfft(train_tmp.numpy(), axis=2)
-                train_amps = np.abs(train_fft).mean(axis=3).mean(axis=0).squeeze()
-                z_vars = Variable(torch.from_numpy(z_vars_im), volatile=True).cuda()
-                batch_fake = generator(z_vars)
-                fake_fft = np.fft.rfft(batch_fake.data.cpu().numpy(), axis=2)
-                batch_fake = batch_fake.data.cpu().numpy()
+                # freqs_tmp = np.fft.rfftfreq(train_tmp.numpy().shape[2],
+                #                             d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
+                # train_fft = np.fft.rfft(train_tmp.numpy(), axis=2)
+                # train_amps = np.abs(train_fft).mean(axis=3).mean(axis=0).squeeze()
+                # z_vars = Variable(torch.from_numpy(z_vars_im), volatile=True).cuda()
+                # batch_fake = generator(z_vars)
+                # fake_fft = np.fft.rfft(batch_fake.data.cpu().numpy(), axis=2)
+                # batch_fake = batch_fake.data.cpu().numpy()
+                #
+                # plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
+                #            train_amps)
 
-                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
-                           train_amps)
-
-                discriminator.save_model(os.path.join(modelpath, modelname % jobid + '.disc'))
-                generator.save_model(os.path.join(modelpath, modelname % jobid + '.gen'))
+                discriminator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.disc'))
+                generator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.gen'))
 
                 generator.train()
                 discriminator.train()
