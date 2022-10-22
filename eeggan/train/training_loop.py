@@ -79,7 +79,6 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 losses_g.append(loss_g)
 
                 if wandb_enabled:
-                    print('logging to wandb')
                     wandb.log(
                         {
                             "generator l_r": generator.optimizer.param_groups[0]['lr'],
