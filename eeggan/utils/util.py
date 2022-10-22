@@ -1,7 +1,7 @@
 # coding=utf-8
 from torch.autograd import Variable
 from torch.nn import Module
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 
@@ -58,6 +58,8 @@ def weight_filler(m):
         m.bias.data.fill_(0.)
 
 def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps):
+    # debuger pdb
+    import pdb; pdb.set_trace()
     fake_amps = np.abs(fake_fft).mean(axis=3).mean(axis=0).squeeze()
 
     plt.figure()
@@ -77,5 +79,5 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
         plt.xticks((), ())
         plt.yticks((), ())
     plt.subplots_adjust(hspace=0)
-    plt.savefig(os.path.join(model_path, model_name % jobid + '_fakes_%d_%d.png' % (i_block, i_epoch)))
+    plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '_fakes_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg'))
     plt.close()
