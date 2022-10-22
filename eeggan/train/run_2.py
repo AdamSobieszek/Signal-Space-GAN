@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(description='Signal EEGAN')
 parser.add_argument('--n_critic', type=int, default=2, help='starting number of critics')
 parser.add_argument('--rampup', type=int, default=100, help='alpha args.rampup')
 parser.add_argument('--seed', type=int, default=0, help='number of epochs')
-parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 400, 800], help='epochs per block')
+parser.add_argument('--block_epochs', type=list, default=[1, 1, 1, 1, 1, 800], help='epochs per block')
 parser.add_argument('--batch_block_list', type=list, default=[2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2], help='batch size per block')
 
 # paths
@@ -42,10 +42,9 @@ parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainha
 parser.add_argument('--model_name', type=str, default = 'test',                                               help = 'model path')
 
 # generator and discriminator arguments
-parser.add_argument('--l_r', type=int, default=0.0001, help='Learning rate')
+parser.add_argument('--l_r', type=int, default=0.05, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
-parser.add_argument('--batch_size', type=int, default=100, help='number of epochs')
 parser.add_argument('--n_z', type=int, default=16, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
@@ -53,7 +52,7 @@ parser.add_argument('--factor', type=int, default=2, help='number of epochs')
 parser.add_argument('--num_map_layer', type=int, default=0, help='number of epochs')
 
 # scheduler
-parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")
+parser.add_argument("--scheduler", type=bool, default=False, help="scheduler")
 
 
 parser.add_argument("--i_block_tmp", type=int, default=0, help="warmup steps")
@@ -124,3 +123,5 @@ discriminator.train()
 training_loop(args.i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, args.i_epoch_tmp, args.block_epochs,
               args.rampup, args.fade_alpha, args.n_critic, rng, device, args.jobid, wandb_enabled = True,
               model_path = args.model_path, model_name = args.model_name, batch_list = args.batch_block_list)
+
+

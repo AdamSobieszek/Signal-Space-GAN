@@ -71,6 +71,7 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
     # plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '_fft_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg'))
     # plt.close()
     # pdn debuger
+    # import pdb; pdb.set_trace()
 
     plt.figure(figsize=(10, 10))
     plt.title(f'Fake samples, block {i_block}')

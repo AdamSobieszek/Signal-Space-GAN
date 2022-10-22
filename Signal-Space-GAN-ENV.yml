@@ -1,0 +1,9 @@
+name: Signal-Space-GAN
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - cudatoolkit=11.6
+  - pytorch
+  - conda-lock
+prefix: C:\Users\hplis\.conda\envs\Signal-Space-GAN

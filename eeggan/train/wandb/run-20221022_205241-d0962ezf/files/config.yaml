@@ -1,0 +1,128 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.4
+    framework: huggingface
+    huggingface_version: 4.23.1
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.10.6
+    start_time: 1666464761.814593
+    t:
+      1:
+      - 1
+      - 11
+      - 49
+      - 55
+      2:
+      - 1
+      - 11
+      - 49
+      - 55
+      3:
+      - 16
+      - 23
+      4: 3.10.6
+      5: 0.13.4
+      6: 4.23.1
+      8:
+      - 3
+      - 5
+batch_block_list:
+  desc: null
+  value:
+  - 21184
+  - 7061
+  - 2353
+  - 784
+  - 20
+  - 2
+batch_size:
+  desc: null
+  value: 100
+block_epochs:
+  desc: null
+  value:
+  - 150
+  - 100
+  - 200
+  - 200
+  - 400
+  - 800
+cuda_path:
+  desc: null
+  value: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4
+data_path:
+  desc: null
+  value: D:\data\workshops\eeg2
+entity:
+  desc: null
+  value: hubertp
+factor:
+  desc: null
+  value: 2
+fade_alpha:
+  desc: null
+  value: 1.0
+i_block_tmp:
+  desc: null
+  value: 0
+i_epoch_tmp:
+  desc: null
+  value: 0
+in_filters:
+  desc: null
+  value: 50
+jobid:
+  desc: null
+  value: 0
+l_r:
+  desc: null
+  value: 0.0001
+mode:
+  desc: null
+  value: client
+model_name:
+  desc: null
+  value: test
+model_path:
+  desc: null
+  value: D:\data\models_brainhack
+n_blocks:
+  desc: null
+  value: 6
+n_chans:
+  desc: null
+  value: 1
+n_critic:
+  desc: null
+  value: 2
+n_z:
+  desc: null
+  value: 16
+num_map_layer:
+  desc: null
+  value: 0
+out_filters:
+  desc: null
+  value: 50
+port:
+  desc: null
+  value: 52
+rampup:
+  desc: null
+  value: 100
+scheduler:
+  desc: null
+  value: false
+seed:
+  desc: null
+  value: 0
+wandb_enabled:
+  desc: null
+  value: true
+wandb_project:
+  desc: null
+  value: eegan
