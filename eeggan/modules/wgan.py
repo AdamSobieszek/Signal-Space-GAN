@@ -399,9 +399,13 @@ class Generator(WGAN_I_Generator):
             n_z, n_z,
             num_layers=num_map_layers
         )
+        self.num_map_layers = num_map_layers
 
     def forward(self,input, truncation_psi = 1):
-        out = self.mapping(input, truncation_psi)
+        if self.num_map_layers ==0:
+            out = input
+        else:
+            out = self.mapping(input, truncation_psi)
         return self.model(out)
 
 class Discriminator(WGAN_I_Discriminator):
