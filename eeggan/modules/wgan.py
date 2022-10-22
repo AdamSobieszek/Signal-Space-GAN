@@ -11,6 +11,7 @@ from eeggan.modules.progressive import(
     ProgressiveDiscriminator,
     DiscriminatorBlocks
 )
+from transformers import get_linear_schedule_with_warmup
 from eeggan.modules.layers.mapping_network import MappingNetwork
 
 

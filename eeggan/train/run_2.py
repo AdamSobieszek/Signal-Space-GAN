@@ -53,7 +53,7 @@ parser.add_argument('--factor', type=int, default=2, help='number of epochs')
 parser.add_argument('--num_map_layer', type=int, default=2, help='number of epochs')
 
 # scheduler
-parser.add_argument("--scheduler", type=bool, default=False, help="scheduler")
+parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")
 parser.add_argument("--warmup_steps", type=float, default=600, help="warmup steps")
 
 
@@ -125,5 +125,5 @@ discriminator.train()
 
 
 training_loop(i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, i_epoch_tmp, args.block_epochs,
-              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = False,
+              args.rampup, args.fade_alpha, args.n_critic, rng, args.n_batch, device, args.jobid, wandb_enabled = True,
               model_path = args.model_path, model_name = args.model_name)
