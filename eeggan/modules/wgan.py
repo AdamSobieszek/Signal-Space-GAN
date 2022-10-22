@@ -13,7 +13,7 @@ from eeggan.modules.progressive import(
 )
 from transformers import get_linear_schedule_with_warmup
 from eeggan.modules.layers.mapping_network import MappingNetwork
-
+import os
 
 class GAN_Module(nn.Module):
     """
@@ -45,10 +45,14 @@ class GAN_Module(nn.Module):
         cpu_model = self.cpu()
         model_state = cpu_model.state_dict()
         opt_state = cpu_model.optimizer.state_dict()
+        # if a file exists, delete it
+        if os.path.exists(fname):
+            os.remove(fname)
 
         torch.save((model_state,opt_state,self.did_init_train),fname)
         if cuda:
             self.cuda()
+
 
     def load_model(self,fname):
         """
@@ -330,11 +334,11 @@ class WGAN_I_Generator(GAN_Module):
         if self.scheduler:
             self.scheduler.step()
 
-    def reset_parameters(self, new_num_steps):
+    def reset_parameters(self, new_num_steps, new_warmup_steps):
         self.optimizer = optim.Adam(self.parameters(), lr=self.alpha, betas=self.betas)
         if self.scheduler:
             self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
-                                                             num_warmup_steps=self.warmup_steps,
+                                                             num_warmup_steps=new_warmup_steps,
                                                              num_training_steps=new_num_steps)
 
     def train_batch(self, batch_noise, discriminator):

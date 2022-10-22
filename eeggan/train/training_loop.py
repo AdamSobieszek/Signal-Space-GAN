@@ -108,12 +108,18 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
                            train_amps)
-
-                discriminator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.disc'))
-                generator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.gen'))
-
                 generator.train()
                 discriminator.train()
+
+            if i_epoch % block_epochs[i_block] - 1 == 0:
+                generator.eval()
+                discriminator.eval()
+
+            discriminator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.disc'))
+            generator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.gen'))
+
+            generator.train()
+            discriminator.train()
 
         fade_alpha = 0.
         generator.model.cur_block += 1

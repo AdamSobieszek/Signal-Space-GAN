@@ -29,7 +29,7 @@ torch.backends.cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='Signal EEGAN')
 
 ### data and file related arguments
-parser.add_argument('--n_critic', type=int, default=1, help='starting number of critics')
+parser.add_argument('--n_critic', type=int, default=2, help='starting number of critics')
 parser.add_argument('--rampup', type=int, default=100, help='alpha args.rampup')
 parser.add_argument('--seed', type=int, default=0, help='number of epochs')
 parser.add_argument('--block_epochs', type=list, default=[150, 100, 200, 200, 400, 800], help='epochs per block')
@@ -38,7 +38,7 @@ parser.add_argument('--n_batch', type=int, default=2648 * 8, help='number of bat
 # paths
 parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
 parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg2",                                     help = 'path to binary data')
-parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainhack',                                               help = 'model path')
+parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainhack',  help = 'model path')
 parser.add_argument('--model_name', type=str, default = 'test',                                               help = 'model path')
 
 # generator and discriminator arguments
