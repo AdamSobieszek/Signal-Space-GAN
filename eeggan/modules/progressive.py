@@ -54,7 +54,6 @@ class ProgressiveDiscriminator(nn.Module):
                 fade = True
 
             if fade and i == self.cur_block + 1:
-                print(input.shape)
                 input = alpha * input + (1. - alpha) * tmp
 
             input = self.blocks[i](input,

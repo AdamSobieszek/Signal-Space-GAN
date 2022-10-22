@@ -1,0 +1,1 @@
+{"generator l_r": 6.666666666666667e-06, "discriminator l_r": 1.3333333333333333e-05, "Loss_F": 3.2076563911687117e-06, "Loss_R": -2.2688729117703588e-08, "Penalty": 0.0, "Generator Loss": 3.831736648862716e-06, "_timestamp": 1666448718.0111856, "_runtime": 20.566828727722168, "_step": 0, "_wandb": {"runtime": 19}}

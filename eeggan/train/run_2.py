@@ -54,7 +54,6 @@ parser.add_argument('--num_map_layer', type=int, default=2, help='number of epoc
 
 # scheduler
 parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")
-parser.add_argument("--warmup_steps", type=float, default=600, help="warmup steps")
 
 
 parser.add_argument("--i_block_temp", type=int, default=0, help="warmup steps")
@@ -95,14 +94,14 @@ if not os.path.exists(args.model_path):
 generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
 discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 
-num_steps_discriminator = args.block_epochs[0] * len(data) * args.n_batch
-num_steps_generator = args.block_epochs[0] * len(data) * (args.n_batch / args.n_critic)
+num_steps_discriminator = args.block_epochs[0]
+num_steps_generator = args.block_epochs[0] * args.n_critic
 
-generator.train_init(alpha=args.l_r, betas=(0., 0.99), scheduler=args.scheduler, warmup_steps=args.warmup_steps,
+generator.train_init(alpha=args.l_r, betas=(0., 0.99), scheduler=args.scheduler, warmup_steps = num_steps_generator / 10,
                      num_steps=num_steps_generator)
 discriminator.train_init(alpha=args.l_r, betas=(0., 0.99), eps_center=0.001,
                          one_sided_penalty=True, distance_weighting=True, scheduler=args.scheduler,
-                         warmup_steps=args.warmup_steps, num_steps=num_steps_discriminator)
+                         warmup_steps = num_steps_discriminator / 10, num_steps=num_steps_discriminator)
 
 generator = generator.apply(weight_filler)
 discriminator = discriminator.apply(weight_filler)

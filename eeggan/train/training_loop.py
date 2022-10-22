@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
 import os
+from utils.util import plot_stuff
 
 
 
@@ -97,17 +98,15 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 print('Epoch: %d   Loss_F: %.10f   Loss_R: %.10f   Penalty: %.10f   Loss_G: %.10f' % (
                     i_epoch, loss_d[0], loss_d[1], loss_d[2], loss_g))
 
-                # freqs_tmp = np.fft.rfftfreq(train_tmp.numpy().shape[2],
-                #                             d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
-                # train_fft = np.fft.rfft(train_tmp.numpy(), axis=2)
-                # train_amps = np.abs(train_fft).mean(axis=3).mean(axis=0).squeeze()
-                # z_vars = Variable(torch.from_numpy(z_vars_im), volatile=True).cuda()
-                # batch_fake = generator(z_vars)
-                # fake_fft = np.fft.rfft(batch_fake.data.cpu().numpy(), axis=2)
-                # batch_fake = batch_fake.data.cpu().numpy()
-                #
-                # plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
-                #            train_amps)
+                freqs_tmp = np.fft.rfftfreq(batch_real.numpy().shape[2],
+                                            d=1 / (250. / np.power(2, n_blocks - 1 - i_block)))
+                # train_fft = np.fft.rfft(batch_real.numpy(), axis=2)
+                train_amps = np.abs(batch_real).mean(axis=3).mean(axis=0).squeeze()
+                fake_fft = np.fft.rfft(batch_fake.data.cpu().numpy(), axis=2)
+                batch_fake = batch_fake.data.cpu().numpy()
+
+                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
+                           train_amps)
 
                 discriminator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.disc'))
                 generator.save_model(os.path.join(model_path, model_name + '%' + str(jobid) + '.gen'))
@@ -127,5 +126,5 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
         print(n_batch)
 
         # reset learning rate and scheduler for next block
-        discriminator.reset_parameters(new_num_steps=block_epochs[i_block] * len(data) * n_batch)
-        generator.reset_parameters(new_num_steps=block_epochs[i_block] * len(data) * (n_batch / n_critic))
+        discriminator.reset_parameters(new_num_steps = block_epochs[i_block], new_warmup_steps = block_epochs[i_block] / 10)
+        generator.reset_parameters(new_num_steps = args.block_epochs[i_block] * args.n_critic, new_warmup_steps= (args.block_epochs[i_block] * args.n_critic) / 10)

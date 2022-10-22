@@ -153,11 +153,11 @@ class WGAN_I_Discriminator(GAN_Module):
         if self.scheduler:
             self.scheduler.step()
 
-    def reset_parameters(self, new_num_steps):
+    def reset_parameters(self, new_num_steps, new_warmup_steps):
         self.optimizer = optim.Adam(self.parameters(),lr = self.alpha, betas = self.betas)
         if self.scheduler:
             self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
-                                                num_warmup_steps = self.warmup_steps,
+                                                num_warmup_steps = new_warmup_steps,
                                                 num_training_steps = new_num_steps)
 
 
