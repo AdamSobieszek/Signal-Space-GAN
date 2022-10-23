@@ -11,7 +11,7 @@ from eeggan.modules.progressive import(
     ProgressiveDiscriminator,
     DiscriminatorBlocks
 )
-from transformers import get_linear_schedule_with_warmup
+from transformers import get_cosine_with_hard_restarts_schedule_with_warmup
 from eeggan.modules.layers.mapping_network import MappingNetwork
 import os
 
@@ -127,9 +127,10 @@ class WGAN_I_Discriminator(GAN_Module):
 
         self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
         if scheduler:
-            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+            self.scheduler = get_cosine_with_hard_restarts_schedule_with_warmup (self.optimizer,
                                                 num_warmup_steps = self.warmup_steps,
-                                                num_training_steps = self.num_steps)
+                                                num_training_steps = self.num_steps,
+                                                num_cycles = 3)
         self.loss = torch.nn.BCELoss()
         self.did_init_train = True
 
@@ -160,9 +161,10 @@ class WGAN_I_Discriminator(GAN_Module):
     def reset_parameters(self, new_num_steps, new_warmup_steps):
         self.optimizer = optim.Adam(self.parameters(),lr = self.alpha, betas = self.betas)
         if self.scheduler:
-            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+            self.scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer,
                                                 num_warmup_steps = new_warmup_steps,
-                                                num_training_steps = new_num_steps)
+                                                num_training_steps = new_num_steps,
+                                                                    num_cycles=3)
 
 
 
@@ -211,9 +213,9 @@ class WGAN_I_Discriminator(GAN_Module):
 
         # concat fx_real and fx_fake
         fx = torch.cat([fx_real, fx_fake], dim=0)
-        mones = torch.zeros_like(fx_fake) - 1
+        zeros = torch.zeros_like(fx_fake)
         ones = torch.zeros_like(fx_real) + 1
-        actual_values = torch.cat([ones, mones], dim=0)
+        actual_values = torch.cat([ones, zeros], dim=0)
 
         truth_values = (fx > 0).float() == actual_values.float()
         accuracy = truth_values.sum() / len(truth_values)
@@ -325,9 +327,10 @@ class WGAN_I_Generator(GAN_Module):
 
         self.optimizer = optim.Adam(self.parameters(),lr=self.alpha,betas=self.betas)
         if scheduler:
-            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+            self.scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer,
                                                 num_warmup_steps = self.warmup_steps,
-                                                num_training_steps = self.num_steps)
+                                                num_training_steps = self.num_steps,
+                                                num_cycles=3)
 
         self.loss = None
 
@@ -350,9 +353,10 @@ class WGAN_I_Generator(GAN_Module):
     def reset_parameters(self, new_num_steps, new_warmup_steps):
         self.optimizer = optim.Adam(self.parameters(), lr=self.alpha, betas=self.betas)
         if self.scheduler:
-            self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+            self.scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer,
                                                              num_warmup_steps=new_warmup_steps,
-                                                             num_training_steps=new_num_steps)
+                                                             num_training_steps=new_num_steps,
+                                                                                num_cycles=3)
 
     def train_batch(self, batch_noise, discriminator):
         """

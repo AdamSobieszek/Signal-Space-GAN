@@ -29,7 +29,7 @@ torch.backends.cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='Signal EEGAN')
 
 ### data and file related arguments
-parser.add_argument('--n_critic', type=int, default=2, help='starting number of critics')
+parser.add_argument('--n_critic', type=int, default=3, help='starting number of critics')
 parser.add_argument('--rampup', type=int, default=100, help='alpha args.rampup')
 parser.add_argument('--seed', type=int, default=0, help='number of epochs')
 parser.add_argument('--block_epochs', type=list, default=[150, 200, 300, 400, 600, 800], help='epochs per block')
@@ -41,7 +41,7 @@ parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainha
 parser.add_argument('--model_name', type=str, default = 'test',                                               help = 'model path')
 
 # generator and discriminator arguments
-parser.add_argument('--l_r', type=int, default=0.06, help='Learning rate')
+parser.add_argument('--l_r', type=int, default=0.01, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
 parser.add_argument('--n_z', type=int, default=8, help='line 153')
