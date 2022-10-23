@@ -52,7 +52,7 @@ parser.add_argument('--num_map_layer', type=int, default=2, help='number of epoc
 parser.add_argument('--n_reg', type=int, default=3, help='number of epochs')
 
 # scheduler
-parser.add_argument("--scheduler", type=bool, default=False, help="scheduler")
+parser.add_argument("--scheduler", type=bool, default=True, help="scheduler")
 
 
 parser.add_argument("--i_block_tmp", type=int, default=0, help="warmup steps")
@@ -83,13 +83,20 @@ random.seed(args.seed)
 rng = np.random.RandomState(args.seed)
 
 data = ProcessedEEGDataset(args.data_path)
+# grid search
+params_list = [[['l_r', 0.1], ['block_epochs', [150, 200, 300, 400, 600, 800]], ['batch_block_list', [2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2]], ['n_reg', 3]],
+               [['l_r', 0.1], ['block_epochs', [150, 200, 300, 400, 600, 800]], ['batch_block_list', [2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2]], ['n_reg', 5]]]
 
 
 modelname = 'Progressive%s'
 if not os.path.exists(args.model_path):
     os.makedirs(args.model_path)
 
-for params in [1]: #params to lista [block_epochs, lr,
+for params in params_list: #params to lista [block_epochs, lr,
+    args.l_r = params[0][1]
+    args.block_epochs = params[1][1]
+    args.batch_block_list = params[2][1]
+    args.n_reg = params[3][1]
     generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
     discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 
