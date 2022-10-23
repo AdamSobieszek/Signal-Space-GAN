@@ -10,7 +10,7 @@ from utils.util import plot_stuff
 
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, rng, device, jobid, wandb_enabled = False,
+                  rampup, fade_alpha, n_critic, n_reg, rng, device, jobid, wandb_enabled = False,
                   model_path = None, model_name = None, batch_list = None):
     losses_g = []
     losses_d = []
@@ -48,9 +48,9 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 batch_real = train_batches.requires_grad_(True).cuda()
                 batch_real = batch_real.unsqueeze(1)
-
+                
                 z_vars = rng.normal(0, 1, size=(len(train_batches), n_z)).astype(
-                    np.float32)
+                      np.float32)
                 with torch.no_grad():
                     z_vars = torch.from_numpy(z_vars).cuda()
 
@@ -58,7 +58,38 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 batch_fake = output.data.requires_grad_(True).cuda()
 
-                loss_d = discriminator.train_batch(batch_real, batch_fake) ## TUTAJ ERROR!!
+                loss_d = discriminator.train_batch(batch_real, batch_fake) 
+                loss = disc.mean().reshape(-1)
+                
+                if i_epoch%n_reg == 0:
+
+                  z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
+                  with torch.no_grad():
+                      z_vars = torch.from_numpy(z_vars).cuda()
+
+                  gen_ws = generator.mapping_network(z_vars)
+                  gen_sig = generator.model(gen_ws)
+
+                  # get signals and ws
+                  pl_noise = torch.randn_like(gen_sig)
+                  pl_grads = torch.autograd.grad(outputs=[(gen_sig * pl_noise).sum()], inputs=[gen_ws], create_graph=True,
+                                                 only_inputs=True)[0]
+                  # delete conv gradients?
+                  pl_lengths = pl_grads.square().sum(2).mean(1).sqrt()
+                  if generator.pl_mean == 0:
+                      pl_mean = pl_lengths.mean()
+                  else:
+                      pl_mean = generator.pl_mean*0.98 + pl_lengths.mean()*0.02 #moving average
+                  pl_penalty = (pl_lengths - pl_mean).square()
+
+                  generator.pl_mean = pl_mean.detach()
+                  loss_Gpl = pl_penalty * 0.000344 #maybe increase this weight
+                  loss_Gpl.mean().mul(gain).backward()
+                  # Backprop gradient
+                  loss.backward(mone)
+
+                  # Update parameters
+                  generator.update_parameters()
 
 
                 if idx == n_critic - 1 :
