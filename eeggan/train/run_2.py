@@ -44,7 +44,7 @@ parser.add_argument('--model_name', type=str, default = 'test',                 
 parser.add_argument('--l_r', type=int, default=0.06, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
-parser.add_argument('--n_z', type=int, default=16, help='line 153')
+parser.add_argument('--n_z', type=int, default=8, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--factor', type=int, default=2, help='number of epochs')
@@ -95,10 +95,10 @@ if not os.path.exists(args.model_path):
     os.makedirs(args.model_path)
 
 for params in params_list: #params to lista [block_epochs, lr,
-    args.l_r = params[0][1]
-    args.block_epochs = params[1][1]
-    args.batch_block_list = params[2][1]
-    args.n_reg = params[3][1]
+    # args.l_r = params[0][1]
+    # args.block_epochs = params[1][1]
+    # args.batch_block_list = params[2][1]
+    # args.n_reg = params[3][1]
     generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
     discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 

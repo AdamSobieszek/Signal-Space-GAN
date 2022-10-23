@@ -58,7 +58,9 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 batch_fake = output.data.requires_grad_(True).cuda()
 
-                loss_d = discriminator.train_batch(batch_real, batch_fake) 
+                loss_d = discriminator.train_batch(batch_real, batch_fake)
+                # PDB debugger
+                accuracy = loss_d[-1]
 
                 if i_epoch%n_reg == 0:
 
@@ -115,10 +117,10 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                             "generator l_r": generator.optimizer.param_groups[0]['lr'],
                             "mapping loss": loss_Gpl.cpu().detach().numpy().mean(),
                             "discriminator l_r": discriminator.optimizer.param_groups[0]['lr'],
-                            "Loss_F": loss_d[0],
                             "Discriminator Loss": loss_d[1],
                             "Penalty": loss_d[2],
-                            "Generator Loss": loss_g
+                            "Generator Loss": loss_g,
+                            "Accuracy": accuracy,
                         }
                     )
 

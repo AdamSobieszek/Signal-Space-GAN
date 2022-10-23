@@ -201,9 +201,22 @@ class WGAN_I_Discriminator(GAN_Module):
                            retain_graph=(self.eps_drift>0 or self.eps_center>0))
 
         fx_fake = self(batch_fake)
+
+
         loss_fake = fx_fake.mean().reshape(-1)
+
+
         loss_fake.backward(one,
                            retain_graph=(self.eps_drift>0 or self.eps_center>0))
+
+        # concat fx_real and fx_fake
+        fx = torch.cat([fx_real, fx_fake], dim=0)
+        mones = torch.zeros_like(fx_fake) - 1
+        ones = torch.zeros_like(fx_real) + 1
+        actual_values = torch.cat([ones, mones], dim=0)
+
+        truth_values = (fx > 0).float() == actual_values.float()
+        accuracy = truth_values.sum() / len(truth_values)
 
         loss_drift = 0
         loss_center = 0
@@ -235,7 +248,7 @@ class WGAN_I_Discriminator(GAN_Module):
         loss_real = -loss_real.data[0]
         loss_fake = loss_fake.data[0]
         loss_penalty = loss_penalty.data[0]
-        return loss_real,loss_fake,loss_penalty,loss_drift,loss_center # return loss
+        return loss_real,loss_fake,loss_penalty,loss_drift,loss_center, accuracy # return loss
 
 
     def calc_gradient_penalty(self, batch_real, batch_fake):
