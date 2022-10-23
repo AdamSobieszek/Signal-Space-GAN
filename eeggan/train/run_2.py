@@ -84,8 +84,10 @@ rng = np.random.RandomState(args.seed)
 
 data = ProcessedEEGDataset(args.data_path)
 # grid search
-params_list = [[['l_r', 0.1], ['block_epochs', [150, 200, 300, 400, 600, 800]], ['batch_block_list', [2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2]], ['n_reg', 3]],
-               [['l_r', 0.1], ['block_epochs', [150, 200, 300, 400, 600, 800]], ['batch_block_list', [2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2]], ['n_reg', 5]]]
+params_list = [[['l_r', 0.05], ['block_epochs', [11,11,11,11,11,11]], ['batch_block_list', [2648*16, 2648*16, 2648*16, 2648*16, 20, 2]], ['n_reg', 2]],
+[['l_r', 0.05], ['block_epochs', [11, 11, 11, 11, 11, 11]], ['batch_block_list', [2648*16, 2648*16, 2648*8, 2648*8, 20, 2]], ['n_reg', 3]],
+[['l_r', 0.05], ['block_epochs', [500, 700, 1000, 1400, 1600, 1800]], ['batch_block_list', [2648*16, 2648*16, 2648*8, 2648*8, 20, 2]], ['n_reg', 3]],
+               [['l_r', 0.03], ['block_epochs', [1000, 1000, 1300, 1400, 1600, 1800]], ['batch_block_list', [2648*16, 2648*16, 2648*8, 2648*8//27, 20, 2]], ['n_reg', 5]]]
 
 
 modelname = 'Progressive%s'
