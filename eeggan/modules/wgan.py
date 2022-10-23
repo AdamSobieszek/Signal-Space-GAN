@@ -31,7 +31,7 @@ class GAN_Module(nn.Module):
 
         self.did_init_train = False
 
-    def save_model(self,fname):
+    def save_model(self,fname, folder):
         """
         Saves `state_dict` of model and optimizer
 
@@ -46,8 +46,8 @@ class GAN_Module(nn.Module):
         model_state = cpu_model.state_dict()
         opt_state = cpu_model.optimizer.state_dict()
         # if a file exists, delete it
-        if os.path.exists(fname):
-            os.remove(fname)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
         torch.save((model_state,opt_state,self.did_init_train),fname)
         if cuda:

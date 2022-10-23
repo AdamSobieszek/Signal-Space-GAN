@@ -32,24 +32,24 @@ parser = argparse.ArgumentParser(description='Signal EEGAN')
 parser.add_argument('--n_critic', type=int, default=2, help='starting number of critics')
 parser.add_argument('--rampup', type=int, default=100, help='alpha args.rampup')
 parser.add_argument('--seed', type=int, default=0, help='number of epochs')
-parser.add_argument('--block_epochs', type=list, default=[1, 1, 1, 1, 1, 800], help='epochs per block')
+parser.add_argument('--block_epochs', type=list, default=[150, 200, 300, 400, 600, 800], help='epochs per block')
 parser.add_argument('--batch_block_list', type=list, default=[2648*8, 2648*8//3, 2648*8//9, 2648*8//27, 20, 2], help='batch size per block')
 
 # paths
-parser.add_argument('--cuda_path', type=str, default = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4", help = 'path to CUDA')
 parser.add_argument('--data_path', type=str, default = r"D:\data\workshops\eeg2",                                     help = 'path to binary data')
 parser.add_argument('--model_path', type=str, default = r'D:\data\models_brainhack',  help = 'model path')
 parser.add_argument('--model_name', type=str, default = 'test',                                               help = 'model path')
 
 # generator and discriminator arguments
-parser.add_argument('--l_r', type=int, default=0.05, help='Learning rate')
+parser.add_argument('--l_r', type=int, default=0.06, help='Learning rate')
 parser.add_argument('--n_blocks', type=int, default=6, help='number of documents in a batch for training')
 parser.add_argument('--n_chans', type=int, default=1, help='number of epochs')
 parser.add_argument('--n_z', type=int, default=16, help='line 153')
 parser.add_argument('--in_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--out_filters', type=int, default=50, help='number of epochs')
 parser.add_argument('--factor', type=int, default=2, help='number of epochs')
-parser.add_argument('--num_map_layer', type=int, default=0, help='number of epochs')
+parser.add_argument('--num_map_layer', type=int, default=2, help='number of epochs')
+parser.add_argument('--n_reg', type=int, default=3, help='number of epochs')
 
 # scheduler
 parser.add_argument("--scheduler", type=bool, default=False, help="scheduler")
@@ -72,7 +72,6 @@ parser.add_argument("--entity", default='hubertp', help="wandb entity")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 args = parser.parse_args()
 
-os.environ["CUDA_PATH"] = args.cuda_path
 if args.wandb_enabled:
     wandb.init(project=args.wandb_project, entity=args.entity, config=args)
 
@@ -90,38 +89,39 @@ modelname = 'Progressive%s'
 if not os.path.exists(args.model_path):
     os.makedirs(args.model_path)
 
-generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
-discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
+for params in [1]: #params to lista [block_epochs, lr,
+    generator = Generator(args.n_blocks, args.n_chans, args.n_z, args.in_filters, args.out_filters, args.factor, args.num_map_layer)
+    discriminator = Discriminator(args.n_blocks, args.n_chans, args.in_filters, args.out_filters, args.factor)
 
-num_steps_discriminator = args.block_epochs[0] * args.n_critic
-num_steps_generator = args.block_epochs[0]
+    num_steps_discriminator = args.block_epochs[0] * args.n_critic
+    num_steps_generator = args.block_epochs[0]
 
-generator.train_init(alpha=args.l_r, betas=(0., 0.99), scheduler=args.scheduler, warmup_steps = num_steps_generator / 10,
-                     num_steps=num_steps_generator)
-discriminator.train_init(alpha=args.l_r, betas=(0., 0.99), eps_center=0.001,
-                         one_sided_penalty=True, distance_weighting=True, scheduler=args.scheduler,
-                         warmup_steps = num_steps_discriminator / 10, num_steps=num_steps_discriminator)
+    generator.train_init(alpha=args.l_r, betas=(0., 0.99), scheduler=args.scheduler, warmup_steps = num_steps_generator / 10,
+                         num_steps=num_steps_generator)
+    discriminator.train_init(alpha=args.l_r, betas=(0., 0.99), eps_center=0.001,
+                             one_sided_penalty=True, distance_weighting=True, scheduler=args.scheduler,
+                             warmup_steps = num_steps_discriminator / 10, num_steps=num_steps_discriminator)
 
-generator = generator.apply(weight_filler)
-discriminator = discriminator.apply(weight_filler)
+    generator = generator.apply(weight_filler)
+    discriminator = discriminator.apply(weight_filler)
 
-generator.model.cur_block = args.i_block_tmp
-discriminator.model.cur_block = args.n_blocks - 1 - args.i_block_tmp
-generator.model.alpha = args.fade_alpha
-discriminator.model.alpha = args.fade_alpha
-# print("Size of the training set:",train.shape)
-
-
-# move shit to gpu
-generator = generator.cuda()
-discriminator = discriminator.cuda()
-generator.train()
-discriminator.train()
+    generator.model.cur_block = args.i_block_tmp
+    discriminator.model.cur_block = args.n_blocks - 1 - args.i_block_tmp
+    generator.model.alpha = args.fade_alpha
+    discriminator.model.alpha = args.fade_alpha
+    # print("Size of the training set:",train.shape)
 
 
+    # move shit to gpu
+    generator = generator.cuda()
+    discriminator = discriminator.cuda()
+    generator.train()
+    discriminator.train()
 
-training_loop(args.i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, args.i_epoch_tmp, args.block_epochs,
-              args.rampup, args.fade_alpha, args.n_critic, rng, device, args.jobid, wandb_enabled = True,
-              model_path = args.model_path, model_name = args.model_name, batch_list = args.batch_block_list)
+
+
+    training_loop(args.i_block_tmp, args.n_blocks,args.n_z, discriminator, generator, data, args.i_epoch_tmp, args.block_epochs,
+                  args.rampup, args.fade_alpha, args.n_critic, args.n_reg, rng, device, args.jobid, str(params),args.wandb_enabled,
+                  model_path = args.model_path, model_name = args.model_name, batch_list = args.batch_block_list)
 
 

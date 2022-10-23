@@ -10,7 +10,7 @@ from utils.util import plot_stuff
 
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, n_reg, rng, device, jobid, wandb_enabled = False,
+                  rampup, fade_alpha, n_critic, n_reg, rng, device, jobid, output_name, wandb_enabled = False,
                   model_path = None, model_name = None, batch_list = None):
     losses_g = []
     losses_d = []
@@ -59,37 +59,35 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 batch_fake = output.data.requires_grad_(True).cuda()
 
                 loss_d = discriminator.train_batch(batch_real, batch_fake) 
-                loss = disc.mean().reshape(-1)
-                
+
                 if i_epoch%n_reg == 0:
 
-                  z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
-                  with torch.no_grad():
+                    z_vars = rng.normal(0, 1, size=(n_batch, n_z)).astype(np.float32)
+                    with torch.no_grad():
                       z_vars = torch.from_numpy(z_vars).cuda()
 
-                  gen_ws = generator.mapping_network(z_vars)
-                  gen_sig = generator.model(gen_ws)
+                    gen_ws = generator.mapping(z_vars)
+                    gen_sig = generator.model(gen_ws)
 
-                  # get signals and ws
-                  pl_noise = torch.randn_like(gen_sig)
-                  pl_grads = torch.autograd.grad(outputs=[(gen_sig * pl_noise).sum()], inputs=[gen_ws], create_graph=True,
+                    # get signals and ws
+                    pl_noise = torch.randn_like(gen_sig)
+                    pl_grads = torch.autograd.grad(outputs=[(gen_sig * pl_noise).sum()], inputs=[gen_ws], create_graph=True,
                                                  only_inputs=True)[0]
-                  # delete conv gradients?
-                  pl_lengths = pl_grads.square().sum(2).mean(1).sqrt()
-                  if generator.pl_mean == 0:
+                    # delete conv gradients?
+                    pl_lengths = pl_grads.square().mean(1).sqrt()
+                    if generator.pl_mean == 0:
                       pl_mean = pl_lengths.mean()
-                  else:
+                    else:
                       pl_mean = generator.pl_mean*0.98 + pl_lengths.mean()*0.02 #moving average
-                  pl_penalty = (pl_lengths - pl_mean).square()
+                    pl_penalty = (pl_lengths - pl_mean).square()
 
-                  generator.pl_mean = pl_mean.detach()
-                  loss_Gpl = pl_penalty * 0.000344 #maybe increase this weight
-                  loss_Gpl.mean().mul(gain).backward()
-                  # Backprop gradient
-                  loss.backward(mone)
+                    generator.pl_mean = pl_mean.detach()
+                    loss_Gpl = pl_penalty * 0.000344 #maybe increase this weight
+                    loss_Gpl.mean().mul(1).backward()
+                    # Backprop gradient
 
-                  # Update parameters
-                  generator.update_parameters()
+                    # Update parameters
+                    generator.update_parameters()
 
 
                 if idx == n_critic - 1 :
@@ -115,6 +113,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                     wandb.log(
                         {
                             "generator l_r": generator.optimizer.param_groups[0]['lr'],
+                            "mapping loss": loss_Gpl.cpu().detach().numpy().mean(),
                             "discriminator l_r": discriminator.optimizer.param_groups[0]['lr'],
                             "Loss_F": loss_d[0],
                             "Discriminator Loss": loss_d[1],
@@ -139,7 +138,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 batch_fake = batch_fake.cpu().detach().data.cpu().numpy()
 
                 plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
-                           train_amps)
+                           train_amps, output_name)
                 generator.train()
                 discriminator.train()
 
@@ -147,8 +146,8 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 generator.eval()
                 discriminator.eval()
 
-                discriminator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.disc'))
-                generator.save_model(os.path.join(model_path, model_name + '%' + str(i_block) + '.gen'))
+                discriminator.save_model(os.path.join(model_path, output_name, model_name + '%' + str(i_block) + '.disc'), os.path.join(model_path, output_name))
+                generator.save_model(os.path.join(model_path, output_name, model_name + '%' + str(i_block) + '.gen'), os.path.join(model_path, output_name))
 
                 generator.train()
                 discriminator.train()

@@ -57,7 +57,7 @@ def weight_filler(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0.)
 
-def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps):
+def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid, train_amps, output_name):
     # debuger pdb
     # import pdb; pdb.set_trace()
     # fake_amps = np.abs(fake_fft).mean(axis=3).mean(axis = 0).squeeze()
@@ -82,9 +82,10 @@ def plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, mo
         plt.yticks((), ())
     plt.subplots_adjust(hspace=0)
     # check if file exists
-    if os.path.isfile(os.path.join(model_path, model_name + '%' + str(jobid) + '_fake_%d_%d.png' + '%' + str(i_block) + str(i_epoch) + '.jpg')):
-        os.remove(os.path.join(model_path, model_name + '%' + str(jobid) + '%' + str(i_block) + str(i_epoch) + '_fake_%d_%d.png'))
-    plt.savefig(os.path.join(model_path, model_name + '%' + str(jobid) + '%' + str(i_block) + str(i_epoch) + '_fakes_%d_%d.png'))
+    if not os.path.exists(os.path.join(model_path, output_name, 'pictures')):
+        os.makedirs(os.path.join(model_path, output_name, 'pictures'))
+
+    plt.savefig(os.path.join(model_path, output_name, 'pictures' ,model_name + '%' + str(jobid) + '%' + str(i_block) + str(i_epoch) + '_fakes_%d_%d.png'))
     plt.close()
 
     plt.savefig(os.path.join(model_path, 'aaaa.jpg'))
