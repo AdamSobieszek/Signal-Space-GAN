@@ -48,7 +48,7 @@ class MappingNetwork(torch.nn.Module):
                  num_layers = 8,
                  intermediete_layer_features = None,
                  activation = 'lrelu',
-                 lr_multiplier = 0.5,
+                 lr_multiplier = 0.01,
                  w_avg_beta = 0.998,
                  ):
         super().__init__()
@@ -67,6 +67,7 @@ class MappingNetwork(torch.nn.Module):
             out_features = features_list[idx + 1]
             layer = FullyConnectedLayer(in_features, out_features, activation=activation, lr_multiplier=lr_multiplier)
             setattr(self, f'fc{idx}', layer)
+        self.register_buffer('w_avg', torch.zeros([w_dim]))
 
 
     def forward(self, z, truncation_psi=1, truncation_cutoff=None, update_wavg=False):
@@ -96,5 +97,3 @@ class MappingNetwork(torch.nn.Module):
 
     def extra_repr(self): # For printing the model.
         return f'z_dim={self.z_dim:d}, w_dim={self.w_dim:d}' # For printing the model.
-
-
