@@ -67,7 +67,7 @@ parser.add_argument("--port", default=52, help="port")
 parser.add_argument('--jobid', type=int, default=0, help='current run identifier')
 
 # WANDB
-parser.add_argument("--wandb_enabled", type=bool, default=True, help="wandb")
+parser.add_argument("--wandb_enabled", type=bool, default=False, help="wandb")
 parser.add_argument("--wandb_project", default='eegan', help="wandb project")
 parser.add_argument("--entity", default='hubertp', help="wandb entity")
 
