@@ -67,7 +67,7 @@ class MappingNetwork(torch.nn.Module):
             out_features = features_list[idx + 1]
             layer = FullyConnectedLayer(in_features, out_features, activation=activation, lr_multiplier=lr_multiplier)
             setattr(self, f'fc{idx}', layer)
-        self.register_buffer('w_avg', torch.zeros([w_dim]))
+        
 
 
     def forward(self, z, truncation_psi=1, truncation_cutoff=None, update_wavg=False):
@@ -84,6 +84,8 @@ class MappingNetwork(torch.nn.Module):
 
         # Update moving average of W.
         if update_wavg and self.w_avg_beta is not None: # Update moving average of W.
+            try: _ = self.w_avg
+            except: self.register_buffer('w_avg', torch.zeros([w_dim]))        
             self.w_avg.copy_(z.detach().mean(dim=0).lerp(self.w_avg, self.w_avg_beta)) # Update moving average of W.
 
         # Apply truncation.
