@@ -1,2 +1,2 @@
-# IsoEEG-GAN Brainhack 2022
+# Brainhack 2023
 
