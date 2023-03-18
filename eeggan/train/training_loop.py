@@ -126,7 +126,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 batch_fake = batch_fake.cpu().detach().data.cpu().numpy()
 
-                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
+                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, "jobid",
                            train_amps, output_name)
                 generator.train()
                 discriminator.train()
