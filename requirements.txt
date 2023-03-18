@@ -1,7 +1,4 @@
 alabaster==0.7.12
-anaconda-client==1.11.0
-anaconda-navigator==2.3.1
-anaconda-project==0.11.1
 anyio==3.5.0
 appdirs==1.4.4
 argon2-cffi==21.3.0
@@ -36,17 +33,8 @@ chardet==4.0.0
 charset-normalizer==2.0.4
 click==8.0.4
 cloudpickle==2.0.0
-clyent==1.2.2
 colorama==0.4.5
 colorcet==3.0.0
-conda==22.9.0
-conda-build==3.22.0
-conda-content-trust==0.1.3
-conda-pack==0.6.0
-conda-package-handling==1.9.0
-conda-repo-cli==1.0.20
-conda-token==0.4.0
-conda-verify==3.4.2
 constantly==15.1.0
 cookiecutter==1.7.3
 cryptography==37.0.1
@@ -57,7 +45,6 @@ cytoolz==0.11.0
 daal4py==2021.6.0
 dask==2022.7.0
 datashader==0.14.1
-datashape==0.5.4
 debugpy==1.5.1
 decorator==5.1.1
 defusedxml==0.7.1
@@ -144,7 +131,6 @@ msgpack==1.0.3
 multipledispatch==0.6.0
 munkres==1.1.4
 mypy-extensions==0.4.3
-navigator-updater==0.3.0
 nbclassic==0.3.5
 nbclient==0.5.13
 nbconvert==6.4.4
