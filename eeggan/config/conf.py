@@ -41,6 +41,7 @@ class RunConfig:
 def load_json(path:str) ->dict:
     f = open(path)
     json_config = json.load(f)
+    f.close()
     return json_config
 
 def get_run_config() ->RunConfig:
