@@ -7,6 +7,8 @@ import sys
 import sys
 
 sys.path.append('..')
+sys.path.append('../..')
+sys.path.append('')
 from modules.wgan import Generator, Discriminator
 
 from utils.util import weight_filler
