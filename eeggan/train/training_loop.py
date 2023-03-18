@@ -1,6 +1,5 @@
 import torch
 from torch.autograd import Variable
-import wandb
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
@@ -10,7 +9,7 @@ from utils.util import plot_stuff
 
 
 def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_epoch_tmp, block_epochs,
-                  rampup, fade_alpha, n_critic, n_reg, rng, device, jobid, output_name, wandb_enabled = False,
+                  rampup, fade_alpha, n_critic, n_reg, rng, device, output_name,
                   model_path = None, model_name = None, batch_list = None):
     losses_g = []
     losses_d = []
@@ -111,18 +110,6 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
                 losses_d.append(loss_d)
                 losses_g.append(loss_g)
 
-                if wandb_enabled:
-                    wandb.log(
-                        {
-                            "generator l_r": generator.optimizer.param_groups[0]['lr'],
-                            "mapping loss": loss_Gpl.cpu().detach().numpy().mean(),
-                            "discriminator l_r": discriminator.optimizer.param_groups[0]['lr'],
-                            "Discriminator Loss": loss_d[1],
-                            "Penalty": loss_d[2],
-                            "Generator Loss": loss_g,
-                            "Accuracy": accuracy,
-                        }
-                    )
 
             if i_epoch % (10)*full_epoch == 0:
                 generator.eval()
@@ -139,7 +126,7 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
                 batch_fake = batch_fake.cpu().detach().data.cpu().numpy()
 
-                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, jobid,
+                plot_stuff(fake_fft, freqs_tmp, i_block, i_epoch, batch_fake, model_path, model_name, "jobid",
                            train_amps, output_name)
                 generator.train()
                 discriminator.train()
@@ -162,5 +149,9 @@ def training_loop(i_block_tmp, n_blocks, n_z, discriminator, generator, data, i_
 
 
         # reset learning rate and scheduler for next block
-        discriminator.reset_parameters(new_num_steps = block_epochs[i_block] * n_critic, new_warmup_steps = (block_epochs[i_block] * n_critic) / 10)
-        generator.reset_parameters(new_num_steps = block_epochs[i_block], new_warmup_steps= block_epochs[i_block] / 10)
+        discriminator.reset_parameters(
+            new_num_steps = block_epochs[i_block] * n_critic, 
+            new_warmup_steps = (block_epochs[i_block] * n_critic)/10)
+        
+        generator.reset_parameters(new_num_steps = block_epochs[i_block], 
+                                   new_warmup_steps= block_epochs[i_block]/10)

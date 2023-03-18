@@ -15,5 +15,6 @@
     "n_reg": 3,
     "i_block_tmp": 0,
     "i_epoch_tmp": 0,
-    "fade_alpha": 1.0
+    "fade_alpha": 1.0,
+    "scheduler": 1
 }
