@@ -2,17 +2,17 @@
 import torch
 import torch.nn as nn
 import torch.autograd as autograd
-import eeggan.utils.util as utils
+import utils.util as utils
 from torch.autograd import Variable
 from torch import optim
-from eeggan.modules.progressive import(
+from modules.progressive import(
     ProgressiveGenerator,
     GeneratorBlocks,
     ProgressiveDiscriminator,
     DiscriminatorBlocks
 )
 from transformers import get_cosine_with_hard_restarts_schedule_with_warmup
-from eeggan.modules.layers.mapping_network import MappingNetwork
+from modules.layers.mapping_network import MappingNetwork
 import os
 
 class GAN_Module(nn.Module):
