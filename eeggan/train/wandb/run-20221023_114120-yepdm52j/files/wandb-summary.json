@@ -1,1 +1,0 @@
-{"generator l_r": 0.048469844259769745, "mapping loss": 7.360667223110795e-05, "discriminator l_r": 0.052, "Discriminator Loss": -29.54087257385254, "Penalty": 44.32456588745117, "Generator Loss": 5.834287643432617, "Accuracy": 0.8606327176094055, "_timestamp": 1666518291.9873161, "_runtime": 211.06303215026855, "_step": 12, "_wandb": {"runtime": 211}}

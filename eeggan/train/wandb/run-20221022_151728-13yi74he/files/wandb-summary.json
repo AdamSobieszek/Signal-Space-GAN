@@ -1,1 +1,0 @@
-{"generator l_r": 5e-06, "discriminator l_r": 2.5e-05, "Loss_F": -93.75492095947266, "Loss_R": -0.8872900605201721, "Penalty": 59.74388885498047, "Generator Loss": -0.8871737718582153, "_timestamp": 1666447975.935339, "_runtime": 3327.852954864502, "_step": 104, "_wandb": {"runtime": 3328}}
