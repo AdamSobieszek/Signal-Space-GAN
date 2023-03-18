@@ -21,7 +21,7 @@ from dataset.dataset import ProcessedEEGDataset
 from training_loop import training_loop
 import wandb
 
-matplotlib.use('TKAgg')  # for OSX
+#matplotlib.use('TKAgg')  # for OSX
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
