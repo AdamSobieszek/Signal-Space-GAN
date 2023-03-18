@@ -102,3 +102,5 @@ ENV/
 .mypy_cache/
 
 ./examples/conv_lin/config.py
+
+*.npy

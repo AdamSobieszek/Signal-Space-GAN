@@ -6,7 +6,7 @@ from typing import List
 @dataclass
 class Config:
     n_critic: int
-    ramup: int
+    rampup: int
     seed: int
     block_epochs: List[int]
     batch_block_list: List[int]

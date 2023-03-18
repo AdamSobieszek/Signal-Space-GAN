@@ -1,6 +1,6 @@
 {
     "n_critic": 3,
-    "ramup": 100,
+    "rampup": 100,
     "seed": 0,
     "block_epochs": [150, 200, 300, 400, 600, 800],
     "batch_block_list": [21184, 7061, 2353, 784, 20, 2],
