@@ -4,7 +4,7 @@ from typing import List
 
 
 @dataclass
-class config:
+class Config:
     n_critic: int
     ramup: int
     seed: int
@@ -22,15 +22,36 @@ class config:
     i_block_tmp: int
     i_epoch_tmp: int
     fade_alpha: float
+    scheduler: bool
+
+@dataclass
+class Paths:
+    data_path: str
+    model_path: str
+    model_name: str
 
 
-def get_config():
-    f = open('config.json')
+
+@dataclass
+class RunConfig:
+    config: Config
+    paths: Paths
+
+
+def load_json(path:str) ->dict:
+    f = open(path)
     json_config = json.load(f)
-    run_config = config(**json_config)
+    return json_config
+
+def get_run_config() ->RunConfig:
+    config_json = load_json("../config/config.json")
+    paths_json = load_json("../config/paths.json")
+    run_config = RunConfig
+    run_config.config = Config(**config_json)
+    run_config.paths = Paths(**paths_json)
     return run_config
 
 
 if __name__ == '__main__':
-    run_config = get_config()
-    print(run_config)
+    run_config = get_run_config()
+    print(run_config.config)
