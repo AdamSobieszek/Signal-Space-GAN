@@ -19,7 +19,7 @@ import random
 import argparse
 from dataset.dataset import ProcessedEEGDataset
 from training_loop import training_loop
-import wandb
+#import wandb
 
 #matplotlib.use('TKAgg')  # for OSX
 
@@ -74,8 +74,8 @@ parser.add_argument("--entity", default='hubertp', help="wandb entity")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 args = parser.parse_args()
 
-if args.wandb_enabled:
-    wandb.init(project=args.wandb_project, entity=args.entity, config=args)
+# if args.wandb_enabled:
+#     wandb.init(project=args.wandb_project, entity=args.entity, config=args)
 
 # set seeds
 np.random.seed(args.seed)
