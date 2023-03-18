@@ -7,13 +7,11 @@ import sys
 sys.path.append('..')
 sys.path.append('../..')
 sys.path.append('')
-from modules.wgan import Generator, Discriminator
-from utils.util import weight_filler
 import torch
 import numpy as np
-import matplotlib
 import random
-import argparse
+from modules.wgan import Generator, Discriminator
+from utils.util import weight_filler
 from dataset.dataset import ProcessedEEGDataset
 from training_loop import training_loop
 from eeggan.config.conf import get_run_config
@@ -26,7 +24,10 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
 
 SEED = run_config.config.seed
 # set seeds
