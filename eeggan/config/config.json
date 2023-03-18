@@ -1,0 +1,19 @@
+{
+    "n_critic": 3,
+    "ramup": 100,
+    "seed": 0,
+    "block_epochs": [150, 200, 300, 400, 600, 800],
+    "batch_block_list": [21184, 7061, 2353, 784, 20, 2],
+    "l_r": 0.1,
+    "n_blocks": 6,
+    "n_chans": 1,
+    "n_z": 200,
+    "in_filters": 50,
+    "out_filters": 50,
+    "factor": 2,
+    "num_map_layer": 2,
+    "n_reg": 3,
+    "i_block_tmp": 0,
+    "i_epoch_tmp": 0,
+    "fade_alpha": 1.0
+}
