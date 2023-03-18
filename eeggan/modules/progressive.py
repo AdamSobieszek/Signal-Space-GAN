@@ -1,9 +1,9 @@
 # coding=utf-8
 from torch import nn
-from eeggan.modules.layers.reshape import Reshape, PixelShuffle2d
-from eeggan.modules.layers.normalization import PixelNorm
-from eeggan.modules.layers.weight_scaling import weight_scale
-from eeggan.modules.layers.stdmap import StdMap1d
+from modules.layers.reshape import Reshape, PixelShuffle2d
+from modules.layers.normalization import PixelNorm
+from modules.layers.weight_scaling import weight_scale
+from modules.layers.stdmap import StdMap1d
 from torch.nn.init import calculate_gain
 from typing import List
 import torch
