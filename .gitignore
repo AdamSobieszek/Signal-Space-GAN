@@ -104,3 +104,4 @@ ENV/
 ./examples/conv_lin/config.py
 
 *.npy
+*.gen

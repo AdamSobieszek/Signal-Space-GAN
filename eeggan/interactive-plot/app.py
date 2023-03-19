@@ -1,10 +1,12 @@
 #coding utf-8
+import sys
+sys.path.append('../')
+sys.path.append('../../')
 from sklearn.decomposition import PCA
 from torch.autograd import Variable
-from eeggan.modules.model import Generator, Discriminator
+from eeggan.modules.wgan import Generator, Discriminator
 from streamlit_plotly_events import plotly_events
 from math import factorial
-import sys
 import json
 import streamlit as st
 import torch
@@ -12,7 +14,8 @@ import numpy as np
 import plotly.express as px
 import matplotlib.pyplot as plt
 
-sys.path.append('../../')
+
+
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -64,8 +67,8 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """
     
     try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
+        window_size = np.abs(np.int32(window_size))
+        order = np.abs(np.int32(order))
     except ValueError as msg:
         raise ValueError("window_size and order have to be of type int")
     if window_size % 2 != 1 or window_size < 1:
@@ -88,7 +91,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 st.set_page_config(layout="wide")
 n_samples = 10000
 n_gen_samples = 1
-n_z = 16
+n_z = 6
 
 generator = None
 cloud = None
@@ -104,12 +107,18 @@ visualization, signals = st.columns(2)
 
 
 def initialize_gan():
-    generator = Generator(1, n_z)
+    generator = Generator(n_blocks=6,
+                          n_chans=1,
+                          n_z=6,
+                          in_filters=50,
+                          out_filters=50,
+                          factor=2,
+                          num_map_layers=2)
     generator.train_init()
-    generator.load_model('../examples/conv_lin/test.cnt/Progressive0.gen')
+    generator.load_model('../../0_3.gen')
     return generator
 
-@st.cache
+@st.cache_data
 def initialize_cloud():
     rng = np.random.RandomState(0)
     z_vars_im = rng.normal(0,1,size=(n_samples, n_z)).astype(np.float32)
@@ -129,8 +138,9 @@ with visualization:
         selected_points = np.array([[p['x'], p['y']] for p in selected_points_dict])
 
         selected_z = pca.inverse_transform(selected_points).astype(np.float32)
+        with torch.no_grad():
 
-        z_vars = Variable(torch.from_numpy(selected_z),volatile=True).cpu()
+            z_vars = Variable(torch.from_numpy(selected_z)).cpu()
 
         sample = generator(z_vars).detach().numpy().reshape(len(selected_points), -1).mean(axis=0)
         current_sample = (0.1 * sample + 0.9 * main_sample) / 2

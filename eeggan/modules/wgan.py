@@ -63,7 +63,11 @@ class GAN_Module(nn.Module):
         fname : str
             Filename to load from
         """
-        model_state,opt_state,self.did_init_train = torch.load(fname)
+        device = torch.device("cuda:0" if torch.cuda.is_available()  else "cpu")
+        if device.type=="cpu":
+            model_state,opt_state,self.did_init_train = torch.load(
+                fname, 
+                map_location=device)
 
         self.load_state_dict(model_state)
         self.optimizer.load_state_dict(opt_state)
